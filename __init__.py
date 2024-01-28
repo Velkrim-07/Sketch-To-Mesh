@@ -13,6 +13,30 @@ bl_info = {
 
 import bpy
 
+        ###this is a example class ###
+class ExampleOperator(bpy.types.Operator):
+    bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
+    bl_label = "Load Image"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #properities go here
+
+    #this is where you define what you want to happen
+    def execute(self, context):
+      # Do Something
+        return {'FINISHED'}
+    
+
+    #this is how you would call the operators in other classes
+    #layout.operator("load.ExampleName", text="")
+    #text is what you want displayed
+
+    #there need to be called in the register and unregister definetions respectively close to the bottom of the script
+    #bpy.utils.register_class(LoadImageOperator) 
+    #bpy.utils.unregister_class(LoadImageOperator)
+
+        ###this is the end of the example class ###
+
 class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):  
     # this contains the main layout for the Sketch to mesh program
     # right now the program will not really do anything. 
@@ -31,6 +55,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
 
     def draw(self, context): 
         layout = self.layout
+        
         
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
