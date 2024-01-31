@@ -61,6 +61,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
     def draw(self, context): 
         layout = self.layout
 
+# class that executes test_connection from db_operations
 class StMTestConnectionOperator(bpy.types.Operator):
     bl_idname = "wm.test_connection_operator"
     bl_label = "Test Database Connection"
@@ -153,7 +154,7 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
-    # ralf changes
+    # db and test connection
     bpy.utils.register_class(StMTestConnectionOperator)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
 
@@ -170,7 +171,7 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
-    # ralf changes
+    # db and test connection
     bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
 
