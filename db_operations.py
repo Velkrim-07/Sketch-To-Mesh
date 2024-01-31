@@ -4,6 +4,7 @@ from pymongo.mongo_client import MongoClient
 
 def connect_to_db():
     
+    # username: dev | password: dev123
     uri = "mongodb+srv://devdb:dev123@cluster0.aukmt1u.mongodb.net/?retryWrites=true&w=majority"
 
     client = MongoClient(uri) # creates client from dev db account
