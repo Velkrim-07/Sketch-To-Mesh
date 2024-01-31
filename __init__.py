@@ -61,15 +61,19 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
     def draw(self, context): 
         layout = self.layout
 
-class YourAddonTestConnectionOperator(bpy.types.Operator):
+class StMTestConnectionOperator(bpy.types.Operator):
     bl_idname = "wm.test_connection_operator"
     bl_label = "Test Database Connection"
 
     def execute(self, context):
         # Call the test_connection function
-        test_connection()
-        return {'FINISHED'}
+        success = test_connection()
+        if success:
+            self.report({'INFO'}, "Connection to MongoDB successful!")
+        else:
+            self.report({'ERROR'}, "Failed to connect to MongoDB.")
 
+        return {'FINISHED'}
      
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
@@ -150,7 +154,7 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
     # ralf changes
-    bpy.utils.register_class(YourAddonTestConnectionOperator)
+    bpy.utils.register_class(StMTestConnectionOperator)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
 
 
@@ -167,7 +171,7 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
     # ralf changes
-    bpy.utils.unregister_class(YourAddonTestConnectionOperator)
+    bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
 
 

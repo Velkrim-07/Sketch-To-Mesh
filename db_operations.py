@@ -21,8 +21,10 @@ def test_connection():
         # its just going to try to connect and list db collection names
         collection_names = db.list_collection_names()
         print(f"Connected to MongoDB. Collections: {collection_names}")
+        return True
     except Exception as e:
         print(f"Error: {e}")
+        return False
     finally:
         
         client.close()
