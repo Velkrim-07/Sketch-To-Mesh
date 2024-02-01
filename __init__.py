@@ -12,11 +12,7 @@ bl_info = {
     # Sidebar region (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/region_type_items.html#rna-enum-region-type-items)
 
 import bpy
-
 from .db_operations import test_connection
-
-
-
 
         ###this is a example class ###
 class ExampleOperator(bpy.types.Operator):
@@ -62,6 +58,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
         layout = self.layout
 
 # class that executes test_connection from db_operations
+# will be deleted in beta versions
 class StMTestConnectionOperator(bpy.types.Operator):
     bl_idname = "wm.test_connection_operator"
     bl_label = "Test Database Connection"
