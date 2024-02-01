@@ -13,6 +13,11 @@ bl_info = {
 
 import bpy
 
+from .db_operations import test_connection
+
+
+
+
         ###this is a example class ###
 class ExampleOperator(bpy.types.Operator):
     bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
@@ -55,8 +60,22 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
 
     def draw(self, context): 
         layout = self.layout
-        
-        
+
+# class that executes test_connection from db_operations
+class StMTestConnectionOperator(bpy.types.Operator):
+    bl_idname = "wm.test_connection_operator"
+    bl_label = "Test Database Connection"
+
+    def execute(self, context):
+        # Call the test_connection function
+        success = test_connection()
+        if success:
+            self.report({'INFO'}, "Connection to MongoDB successful!")
+        else:
+            self.report({'ERROR'}, "Failed to connect to MongoDB.")
+
+        return {'FINISHED'}
+     
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
     bl_idname = "PT_Views"
@@ -75,6 +94,9 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(context.scene, "side_views_file_path", text="Side View")
+
+        row = layout.row()
+        row.operator("wm.test_connection_operator", text="Test Connection")
         
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
@@ -132,6 +154,10 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
+    # db and test connection
+    bpy.utils.register_class(StMTestConnectionOperator)
+    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
+
 
 def unregister():
     del bpy.types.Scene.front_views_file_path
@@ -144,6 +170,10 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
+
+    # db and test connection
+    bpy.utils.unregister_class(StMTestConnectionOperator)
+    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
 
 
 if __name__ == "__main__":
