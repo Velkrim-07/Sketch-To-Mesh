@@ -84,7 +84,7 @@ def register():
     bpy.types.Scene.top_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
     bpy.types.Scene.bottom_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
 
-#A functoin that deconstructs the classes and views in the file
+#A function that deconstructs the classes and views in the file
 def unregister():
     bpy.utils.unregister_class(LayoutDemoPanel)
     bpy.utils.register_class(DoImg)
