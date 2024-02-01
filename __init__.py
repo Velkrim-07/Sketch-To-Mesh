@@ -83,7 +83,7 @@ class StMTestImagePrep(bpy.types.Operator):
     def execute(self, context):
         
         path = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
-        success = prepare_image()
+        success = prepare_image(path)
         if success:
             self.report({'INFO'}, "Image Prep Succesful!")
         else:
@@ -112,6 +112,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("wm.test_connection_operator", text="Test Connection")
+        row.operator("wm.prepare_image_operator", text="Test Image Prep")
         
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
@@ -187,8 +188,8 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
     # db test connection and image prep
-    bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(StMTestImagePrep)
+    bpy.utils.unregister_class(StMTestConnectionOperator)
 
 if __name__ == "__main__":
     register()
