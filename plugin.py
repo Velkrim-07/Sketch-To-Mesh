@@ -1,6 +1,19 @@
 from typing import Set
 import bpy
+import pymongo
 from bpy.types import Context
+
+class PingDB(bpy.types.Operator):
+    bl_idname = "object.do_ping"
+    bl_label = "Ping Db"
+
+    def execute(self, context):
+        # db.runCommand(
+        #     {
+        #         ping: 1
+        #     }
+        # )
+        return {'FINISHED'}
 
 class DoImg(bpy.types.Operator):
     bl_idname = "object.do_img"
@@ -35,7 +48,7 @@ class LayoutDemoPanel(bpy.types.Panel):
         scene = context.scene
 
         # Big save button
-        layout.label(text="Big Button:")
+        layout.label(text="Big Save Button:")
         row = layout.row()
         row.scale_y = 2.0
         row.operator("wm.save_mainfile")
@@ -65,13 +78,19 @@ class LayoutDemoPanel(bpy.types.Panel):
         row.prop(context.scene, "bottom_views_file_path", text="Bottom View")
         
         # Big image button
-        layout.label(text="Big Button:")
+        layout.label(text="Big Import Button:")
         row = layout.row()
         row.scale_y = 2.0
         #The operator is a DoImg object
         do_img_op = row.operator("object.do_img")
         #The filepath for the image is passed in here to be used
         do_img_op.myFilePath = context.scene.front_views_file_path
+
+        # Big Ping button
+        layout.label(text="Big Ping Button:")
+        row = layout.row()
+        row.scale_y = 2.0
+        row.operator("object.do_ping") #This needs to change
 
 #A function that initializes all of the classes and views in the file
 def register():
@@ -84,7 +103,7 @@ def register():
     bpy.types.Scene.top_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
     bpy.types.Scene.bottom_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
 
-#A function that deconstructs the classes and views in the file
+#A functoin that deconstructs the classes and views in the file
 def unregister():
     bpy.utils.unregister_class(LayoutDemoPanel)
     bpy.utils.register_class(DoImg)
