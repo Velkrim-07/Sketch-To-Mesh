@@ -16,6 +16,25 @@ from .db_operations import test_connection
 from typing import Set
 from bpy.types import Context
 
+
+
+class Reset_Center_Axis_Operator(bpy.types.Operator):
+    bl_idname = "object.reset_center_axis"
+    bl_label ="Reset"
+
+    def execute(self, context):
+        self.active_X_Center_Object = bpy.data.objects.get("Image_Center_X")
+        self.active_Y_Center_Object = bpy.data.objects.get("Image_Center_Y")
+
+        midpoint = 50
+
+        self.active_X_Center_Object = midpoint
+        self.active_Y_Center_Object = midpoint
+
+        return {'FINISHED'}
+
+
+
 class DoImg(bpy.types.Operator):
     bl_idname = "object.do_img"
     bl_label = "Place Image"
@@ -74,11 +93,14 @@ class Create_Alignment_Window(bpy.types.Operator):
         row = layout.row()
         row.prop(context.scene, "Image_Center_Y", text="Image Y Center", slider=True)
 
+        row = layout.row()
+        row.operator("object.reset_center_axis", text="Reset").__class__
+
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
-
-
     
+
 
 # this contains the main layout for the Sketch to mesh program
  # right now the program will not really do anything. 
@@ -136,7 +158,8 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("wm.test_connection_operator", text="Test Connection")
-        
+
+
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
     bl_label = "AlignViews"
@@ -186,6 +209,7 @@ class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):
         row.operator("mesh.primitive_cube_add", text="Export Mesh")
 
 
+
   ###this is a example class ###
 class ExampleOperator(bpy.types.Operator):
     bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
@@ -199,7 +223,6 @@ class ExampleOperator(bpy.types.Operator):
       # Do Something
         return {'FINISHED'}
     
-
     #this is how you would call the operators in other classes
     #layout.operator("load.ExampleName", text="")
     #text is what you want displayed
@@ -208,12 +231,11 @@ class ExampleOperator(bpy.types.Operator):
     #bpy.utils.register_class(LoadImageOperator) 
     #bpy.utils.unregister_class(LoadImageOperator)
 
-
 ###this is the end of the example class ###
 
 
-def register():
 
+def register():
     bpy.types.Scene.front_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
     bpy.types.Scene.back_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
     bpy.types.Scene.side_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
@@ -221,11 +243,11 @@ def register():
     bpy.types.Scene.mesh_rating = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
-
     bpy.types.Scene.mesh_rating = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Views_Panel)
+    bpy.utils.register_class(Reset_Center_Axis_Operator)
     bpy.utils.register_class(DoImg)
     bpy.utils.register_class(Create_Alignment_Window)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
@@ -233,7 +255,6 @@ def register():
     # ralf changes
     bpy.utils.register_class(StMTestConnectionOperator)
     
- 
 
 
 def unregister():
@@ -247,6 +268,7 @@ def unregister():
     del bpy.types.Scene.FileName_Input
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_Panel)
+    bpy.utils.unregister_class(Reset_Center_Axis_Operator)
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(Create_Alignment_Window)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
