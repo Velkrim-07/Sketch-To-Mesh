@@ -14,10 +14,15 @@ import bpy
 import cv2
 import numpy as np
 import os
-
+from dataclasses import dataclass
 from .db_operations import test_connection
 #this import is not used ye
 # from typing import Set 
+
+@dataclass
+class FilePathStructure:
+    filePath: bpy.props.StringProperty(subtype="FILE_PATH")
+    Description: str
 
 
 def outline_image(image_path, Extension, ImgName, Filedirectory):
@@ -56,52 +61,66 @@ def outline_image(image_path, Extension, ImgName, Filedirectory):
 
     os.chdir(Filedirectory) #changes the directory to the folder where we are going to save the file
     cv2.imwrite(ImgName + Extension, image) #saves the image
-    os.chdir("..\\" + Filedirectory) #goes back one directory
+    os.chdir("..\\") #goes back one directory
 
 
 
 #Image to plane code
 #       bpy.ops.import_image.to_plane(files=[{"name":"A'shla1.jpg", "name":"A'shla1.jpg"}], directory="C:\\Users\\judah\\Pictures\\Art\\A'shala\\", relative=False)
 #
+    
 
 class PlaceImageIn3D(bpy.types.Operator):
     bl_idname = "object.place_image_in_space"
     bl_label ="Reset"
 
     def execute(self, context):
-        My_file_path = bpy.path.abspath(bpy.context.scene.front_views_file_path) #this converts the file fath in something we can actually use
-        NewFilePath: bpy.props.StringProperty(subtype="FILE_PATH")
+        # holds the rotation for each View
+        RotationValue = (0, 0, 0) 
+        #this will keep count of the views were have captured
+        Itervalue = 0
+        #this will be a folder in the sketch-to-Mesh project. This will hold the Image processed
+        ImageDiretoryForNewImage = "ImageFolder"
+        #this will eventually need to move to somewhere more accessable
+        filePathsArray = [bpy.context.scene.front_views_file_path, bpy.context.scene.back_views_file_path,  bpy.context.scene.side_views_file_path ]
+    
 
-        if My_file_path:
-            LastPeriod = My_file_path.rfind(".")
-            Extension =  My_file_path[LastPeriod: ]
+        for file_path in filePathsArray : 
+            NewFilePath: bpy.props.StringProperty(subtype="FILE_PATH")
 
-            ImageDirection = "frontImage"
-            ImageDiretory = "ImageFolder\\"
-            #this is where we want to save the picture so i can be reaccessed
-            outline_image(My_file_path, Extension, ImageDirection, ImageDiretory)
-            NewFilePath = os.path.abspath( ImageDiretory + ImageDirection + Extension)
+            if file_path:
+                #this is used for the new image. We want to save the new image as the same type of file as the first
+                Extension =  file_path[file_path.rfind("."): ] 
 
-        if NewFilePath:
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.paint.texture_paint_toggle()
-            bpy.ops.paint.texture_paint_toggle()
-            bpy.ops.mesh.primitive_plane_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                # this decides depending on the view the rotation of the plane object
+                match Itervalue :
+                    case 0: RotationValue = (90, 0, 0)
+                    case 1: RotationValue = (90, 90, 0)
+                    case 2: RotationValue = (0, 0, 0)
 
-            
+                #this is the file name for the image we are creating
+                ImgName = "View" + str(Itervalue)
 
-            Lastslash = NewFilePath.rfind("\\")
-            
-            filename = os.path.basename(NewFilePath)
-            FileDirectory = NewFilePath[:Lastslash] + "\\"
-            
-            #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
+                #this is where we want to save the picture so i can be reaccessed
+                outline_image(file_path, Extension, ImgName, ImageDiretoryForNewImage)
+                #this creates a new file path to the image we just saved
+                NewFilePath = os.path.abspath(ImageDiretoryForNewImage + "\\" + ImgName + Extension) 
+                
+                if NewFilePath:
+                    bpy.ops.object.editmode_toggle()
+                    bpy.ops.paint.texture_paint_toggle()
+                    bpy.ops.mesh.primitive_plane_add(size=4, enter_editmode=False, align='WORLD', location=(0, 0, 0), rotation=RotationValue, scale=(20, 20, 20))
+                    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                    
+                    filename = os.path.basename(NewFilePath)
+                    FileDirectory = NewFilePath[: NewFilePath.rfind("\\")] + "\\"
+                    
+                    #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
 
-            bpy.ops.import_image.to_plane(files=[{"name":'frontImage'+Extension, "name":'frontImage'+Extension}], directory="C:\\Users\\judah\\Desktop\\Code Stuffs\\Filtered2\\Filtered\\Sketch-To-Mesh\\ImageFolder\\", relative=False)
-        else:
-            self.report({'ERROR'}, "No inputted Image.")
+                    bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
+                else:
+                    self.report({'ERROR'}, "No inputted Image.")
+                Itervalue = Itervalue + 1
 
         return {'FINISHED'}
     
@@ -154,6 +173,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
         
         row = layout.row()
         row.prop(context.scene, "front_views_file_path", text="Front View")
+       
 
         row = layout.row()
         row.prop(context.scene, "back_views_file_path", text="Back View")
@@ -262,9 +282,9 @@ class ExampleOperator(bpy.types.Operator):
 
 
 def register():
-    bpy.types.Scene.front_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
-    bpy.types.Scene.back_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
-    bpy.types.Scene.side_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
+    bpy.types.Scene.front_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH", description="Front View")
+    bpy.types.Scene.back_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH", description="Back View")
+    bpy.types.Scene.side_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH", description="Side View")
     bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Poly Count", default=10, min=0, max=100)
     bpy.types.Scene.mesh_rating = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
