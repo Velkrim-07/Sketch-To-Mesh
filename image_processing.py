@@ -110,8 +110,8 @@ def test():
     cv2.imshow('Matches between Image 2 and Image 3', matched_image23)
     cv2.imshow('Matches between Image 1 and Image 3', matched_image13)
 
-    cv2.waitKey(0)  # Wait for a key press to exit
-    cv2.destroyAllWindows()  # Close all the opened windows
+    cv2.waitKey(0)  
+    cv2.destroyAllWindows()  
 
 # example usage
 #image_path = 'C:/Users/RAFAEL MUITO ZIKA/Pictures/emoji disdcord/pekora fate.png'
