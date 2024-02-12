@@ -9,7 +9,7 @@ bl_info = {
 }
     # 3D Viewport area (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/space_type_items.html#rna-enum-space-type-items)
     # Sidebar region (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/region_type_items.html#rna-enum-region-type-items)
-
+    
 import bpy
 import cv2
 import numpy as np
@@ -19,13 +19,16 @@ from .db_operations import test_connection
 #this import is not used ye
 # from typing import Set 
 
+
 globalPlaneArray = []
 globalfilePathsArray = []
 
-@dataclass
-class FilePathStructure:
-    filePath: bpy.props.StringProperty(subtype="FILE_PATH")
-    Description: str
+#FutureReference
+#@dataclass
+#class FilePathStructure:
+    #filePath: bpy.props.StringProperty(subtype="FILE_PATH")
+    #Description: str
+
 
 
 def outline_image(image_path, Extension, ImgName, Filedirectory):
@@ -61,7 +64,7 @@ def outline_image(image_path, Extension, ImgName, Filedirectory):
             print("Error: Combined center of mass could not be calculated.")
     else:
         print("Error: No contours found.")
-
+        
     os.chdir(Filedirectory) #changes the directory to the folder where we are going to save the file
     cv2.imwrite(ImgName + Extension, image) #saves the image
     os.chdir("..\\") #goes back one directory
@@ -71,7 +74,6 @@ def outline_image(image_path, Extension, ImgName, Filedirectory):
 #Image to plane code
 #       bpy.ops.import_image.to_plane(files=[{"name":"A'shla1.jpg", "name":"A'shla1.jpg"}], directory="C:\\Users\\judah\\Pictures\\Art\\A'shala\\", relative=False)
 #
-    
 
 class PlaceImageIn3D(bpy.types.Operator):
     bl_idname = "object.place_image_in_space"
@@ -155,19 +157,37 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
     def draw(self, context): 
         layout = self.layout
 
-
+# class that executes test_connection from db_operations
+# will be deleted in beta versions
 
 class StMTestConnectionOperator(bpy.types.Operator):
     bl_idname = "wm.test_connection_operator"
     bl_label = "Test Database Connection"
 
     def execute(self, context):
-        # Call the test_connection function
+        
         success = test_connection()
         if success:
             self.report({'INFO'}, "Connection to MongoDB successful!")
         else:
             self.report({'ERROR'}, "Failed to connect to MongoDB.")
+        return {'FINISHED'}
+
+# import cv2
+from .image_processing import prepare_image # the . is on purpose. do not remove
+class StMTestImagePrep(bpy.types.Operator):
+    bl_idname = "wm.prepare_image_operator"
+    bl_label = "Test Image Prep"
+
+    def execute(self, context):
+        
+        path = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
+        success = prepare_image(path)
+        if success:
+            self.report({'INFO'}, "Image Prep Succesful!")
+        else:
+            self.report({'ERROR'}, "Failed to Image Prep.")
+
         return {'FINISHED'}
      
 
@@ -216,6 +236,8 @@ class DoImg(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+
+        row.operator("wm.prepare_image_operator", text="Test Image Prep")
 
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
@@ -309,6 +331,9 @@ def register():
     # ralf changes
     bpy.utils.register_class(StMTestConnectionOperator)
     
+   # db test connection and image prep
+    bpy.utils.register_class(StMTestConnectionOperator) 
+    bpy.utils.register_class(StMTestImagePrep)  
 
 
 def unregister():
@@ -328,8 +353,10 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     # ralf changes
     bpy.utils.unregister_class(StMTestConnectionOperator)
-  
 
+    # db test connection and image prep
+    bpy.utils.unregister_class(StMTestImagePrep)
+    bpy.utils.unregister_class(StMTestConnectionOperator)
 
 if __name__ == "__main__":
     register()
