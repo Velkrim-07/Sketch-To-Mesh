@@ -19,6 +19,9 @@ from .db_operations import test_connection
 #this import is not used ye
 # from typing import Set 
 
+globalPlaneArray = []
+globalfilePathsArray = []
+
 @dataclass
 class FilePathStructure:
     filePath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -74,6 +77,9 @@ class PlaceImageIn3D(bpy.types.Operator):
     bl_idname = "object.place_image_in_space"
     bl_label ="Reset"
 
+    PlaneArray = globalPlaneArray
+    filePathsArray = globalfilePathsArray
+
     def execute(self, context):
         # holds the rotation for each View
         RotationValue = (0, 0, 0) 
@@ -82,6 +88,7 @@ class PlaceImageIn3D(bpy.types.Operator):
         #this will be a folder in the sketch-to-Mesh project. This will hold the Image processed
         ImageDiretoryForNewImage = "ImageFolder"
         #this will eventually need to move to somewhere more accessable
+        #this is only here for now
         filePathsArray = [bpy.context.scene.front_views_file_path, bpy.context.scene.back_views_file_path,  bpy.context.scene.side_views_file_path ]
     
 
@@ -117,9 +124,13 @@ class PlaceImageIn3D(bpy.types.Operator):
                     
                     #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
 
-                    bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
+                    plane = bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
+                    self.planeArray.insert(plane) # allows us to access the plane after creation
                 else:
                     self.report({'ERROR'}, "No inputted Image.")
+                Itervalue = Itervalue + 1
+            else:
+                self.report({'ERROR'}, "No inputted Image.")
                 Itervalue = Itervalue + 1
 
         return {'FINISHED'}
@@ -216,7 +227,6 @@ class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
         row = layout.row()
         row.operator("object.place_image_in_space", text="Align Image")
 
