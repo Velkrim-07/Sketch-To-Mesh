@@ -55,7 +55,7 @@ def match_features(descriptors1, descriptors2, method='ORB'):
     # RATIO TEST
     good_matches = []
     for m, n in matches:
-        if m.distance < 0.5 * n.distance:  # Ratio test
+        if m.distance < 0.65 * n.distance:  # Ratio testö
             good_matches.append(m)
     
     return good_matches
