@@ -1,7 +1,8 @@
 from typing import Set
 import bpy
-import pymongo
+# import pymongo
 from bpy.types import Context
+from bpy_extras.io_utils import ExportHelper
 
 class PingDB(bpy.types.Operator):
     bl_idname = "object.do_ping"
@@ -13,6 +14,18 @@ class PingDB(bpy.types.Operator):
         #         ping: 1
         #     }
         # )
+        return {'FINISHED'}
+    
+class ErrorHandling(bpy.types.Operator):
+    bl_idname = "object.error"
+    bl_label = "Error!!"
+
+    errorMessage = "Please select an image file"
+    myFilePath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        if not self.myFilePath.endswith(".png"):
+            context.window_manager.invoke_popup(self)
         return {'FINISHED'}
 
 class DoImg(bpy.types.Operator):
@@ -45,8 +58,6 @@ class LayoutDemoPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        scene = context.scene
-
         # Big save button
         layout.label(text="Big Save Button:")
         row = layout.row()
@@ -56,6 +67,8 @@ class LayoutDemoPanel(bpy.types.Panel):
         #front file path
         row = layout.row()
         row.prop(context.scene, "front_views_file_path", text="Front View")
+        do_error_checking = row.operator("object.error")
+        do_error_checking.myFilePath = context.scene.front_views_file_path
 
         #right file path
         row = layout.row()
@@ -96,6 +109,7 @@ class LayoutDemoPanel(bpy.types.Panel):
 def register():
     bpy.utils.register_class(LayoutDemoPanel)
     bpy.utils.register_class(DoImg)
+    bpy.utils.register_class(ErrorHandling)
     bpy.types.Scene.front_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
     bpy.types.Scene.right_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
     bpy.types.Scene.left_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH")
@@ -106,7 +120,8 @@ def register():
 #A functoin that deconstructs the classes and views in the file
 def unregister():
     bpy.utils.unregister_class(LayoutDemoPanel)
-    bpy.utils.register_class(DoImg)
+    bpy.utils.unregister_class(DoImg)
+    bpy.utils.unregister_class(ErrorHandling)
     bpy.types.Scene.front_views_file_path
     bpy.types.Scene.right_views_file_path
     bpy.types.Scene.left_views_file_path
