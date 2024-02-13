@@ -91,6 +91,23 @@ class StMTestImagePrep(bpy.types.Operator):
         #    self.report({'ERROR'}, "Failed to Image Prep.")
 
         return {'FINISHED'}
+    
+from .db_operations import save_file_to_db # the . is on purpose. do not remove
+class StMTestSaveFileToDb(bpy.types.Operator):
+    bl_idname = "wm.save_file_to_db_operator"
+    bl_label = "Test Saving File"
+
+    def execute(self, context):
+        
+        save_file_to_db()
+        
+        #success = prepare_image(path)
+        #if success:
+        #    self.report({'INFO'}, "Image Prep Succesful!")
+        #else:
+        #    self.report({'ERROR'}, "Failed to Image Prep.")
+
+        return {'FINISHED'}
      
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
@@ -112,8 +129,11 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
         row.prop(context.scene, "side_views_file_path", text="Side View")
 
         row = layout.row()
+
+        # tests
         row.operator("wm.test_connection_operator", text="Test Connection")
         row.operator("wm.prepare_image_operator", text="Test Image Prep")
+        row.operator("wm.save_file_to_db_operator", text="Save File to DB")
         
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
@@ -175,6 +195,9 @@ def register():
     bpy.utils.register_class(StMTestConnectionOperator) 
     bpy.utils.register_class(StMTestImagePrep)  
 
+    # StMTestSaveFileToDb
+    bpy.utils.register_class(StMTestSaveFileToDb) 
+
 
 def unregister():
     del bpy.types.Scene.front_views_file_path
@@ -191,6 +214,9 @@ def unregister():
     # db test connection and image prep
     bpy.utils.unregister_class(StMTestImagePrep)
     bpy.utils.unregister_class(StMTestConnectionOperator)
+
+    #StMTestSaveFileToDb
+    bpy.utils.unregister_class(StMTestSaveFileToDb)
 
 if __name__ == "__main__":
     register()

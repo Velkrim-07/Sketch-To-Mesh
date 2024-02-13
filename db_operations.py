@@ -2,6 +2,7 @@ import bpy
 import io
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
+from .file_conversion import encode_file, decode_file
 
 def connect_to_db():
     
@@ -31,17 +32,19 @@ def test_connection():
         
         client.close()
 
+# db, collection and file path temporarily hardcoded
 def save_file_to_db():
-    mClient = MongoClient('mongodb+srv://devdb:dev123@cluster0.aukmt1u.mongodb.net/?retryWrites=true&w=majority')
+
+    mClient = connect_to_db()
     db = mClient['StM-dev']
     collection = db['Test']
 
-    blend_file_path = r"C:\Users\James Burns\Documents\untitled.blend"
+    blend_file_path = r"C:\Users\Rafael\Desktop\Exampel\IMG_1363.jpg"
+    blend_file_name = blend_file_path.split("\\")[-1] # just grabs the end of the file path so we can properly describe it in the DB
 
-    with open(blend_file_path, "rb") as file:
-        blend_file_contents = io.BytesIO(file.read())
+    file_encoded = encode_file(blend_file_path)
 
-    data = {"filename": "untitled.blend", "data": blend_file_contents.getvalue()}
+    data = {"filename": blend_file_name, "data": file_encoded.getvalue()}
 
     collection.insert_one(data)
 
