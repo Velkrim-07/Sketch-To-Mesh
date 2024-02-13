@@ -1,4 +1,5 @@
 import bpy
+import io
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
 
@@ -29,6 +30,22 @@ def test_connection():
     finally:
         
         client.close()
+
+def save_file_to_db():
+    mClient = MongoClient('mongodb+srv://devdb:dev123@cluster0.aukmt1u.mongodb.net/?retryWrites=true&w=majority')
+    db = mClient['StM-dev']
+    collection = db['Test']
+
+    blend_file_path = r"C:\Users\James Burns\Documents\untitled.blend"
+
+    with open(blend_file_path, "rb") as file:
+        blend_file_contents = io.BytesIO(file.read())
+
+    data = {"filename": "untitled.blend", "data": blend_file_contents.getvalue()}
+
+    collection.insert_one(data)
+
+    mClient.close()
 
 # run the test when this module is executed
 if __name__ == "__main__":
