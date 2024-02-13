@@ -33,19 +33,21 @@ GlobalFileImageStructArray = [] #this will eventually replace the two array unde
 globalPlaneArray = [] # a list of the names of the planes in Blender
 globalfilePathsArray = [] # a list of the file path we wan to keep track of
 
+
+    
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
 
     def execute(self, context):
-        path = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
-        success = prepare_image(path)
-        if success:
-            self.report({'INFO'}, "Image Prep Succesful!")
-        else:
-            self.report({'ERROR'}, "Failed to Image Prep.")
-
-        return {'FINISHED'}
+        
+        test()
+        
+        #success = prepare_image(path)
+        #if success:
+        #    self.report({'INFO'}, "Image Prep Succesful!")
+        #else:
+        #    self.report({'ERROR'}, "Failed to Image Prep.")
 
 
 
@@ -226,7 +228,6 @@ class Reset_Input_Images(bpy.types.Operator):
             bpy.data.objects[images].select_set(True)
             #deletes the image plane in the array
             bpy.ops.object.delete(use_global=False, confirm=False)
-
         return {'FINISHED'}
 
      
