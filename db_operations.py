@@ -33,13 +33,15 @@ def test_connection():
         client.close()
 
 # db, collection and file path temporarily hardcoded
-def save_file_to_db():
+def save_file_to_db(file_path_db):
 
     mClient = connect_to_db()
     db = mClient['StM-dev']
     collection = db['Test']
 
-    blend_file_path = r"C:\Users\Rafael\Desktop\Exampel\IMG_1363.jpg"
+    # ideally this is going to be file_path_db; the file we want to convert to binary and save in the database. since this is not currently connected to the workflow of the
+    # plugin, we left hardcoded to be able to perform a demonstration.
+    blend_file_path = r"C:\Users\Rafael\Desktop\Exampel\IMG_1363.jpg" 
     blend_file_name = blend_file_path.split("\\")[-1] # just grabs the end of the file path so we can properly describe it in the DB
 
     file_encoded = encode_file(blend_file_path)
