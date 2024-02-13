@@ -1,6 +1,8 @@
 import bpy
+import io
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
+from .file_conversion import encode_file, decode_file
 
 def connect_to_db():
     
@@ -29,6 +31,26 @@ def test_connection():
     finally:
         
         client.close()
+
+# db, collection and file path temporarily hardcoded
+def save_file_to_db(file_path_db):
+
+    mClient = connect_to_db()
+    db = mClient['StM-dev']
+    collection = db['Test']
+
+    # ideally this is going to be file_path_db; the file we want to convert to binary and save in the database. since this is not currently connected to the workflow of the
+    # plugin, we left hardcoded to be able to perform a demonstration.
+    blend_file_path = r"C:\Users\Rafael\Desktop\Exampel\IMG_1363.jpg" 
+    blend_file_name = blend_file_path.split("\\")[-1] # just grabs the end of the file path so we can properly describe it in the DB
+
+    file_encoded = encode_file(blend_file_path)
+
+    data = {"filename": blend_file_name, "data": file_encoded.getvalue()}
+
+    collection.insert_one(data)
+
+    mClient.close()
 
 # run the test when this module is executed
 if __name__ == "__main__":

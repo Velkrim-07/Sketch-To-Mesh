@@ -53,9 +53,10 @@ def match_features(descriptors1, descriptors2, method='ORB'):
     matches = bf.knnMatch(descriptors1, descriptors2, k=2)
     
     # RATIO TEST
+    # filters out weak matches by comparing the distance of the closes neighbor to that of the second closest neighbor.
     good_matches = []
     for m, n in matches:
-        if m.distance < 0.65 * n.distance:  # Ratio testö
+        if m.distance < 0.75 * n.distance:  # Ratio test
             good_matches.append(m)
     
     return good_matches
@@ -82,9 +83,9 @@ def detect_and_describe_akaze(image_path):
 
 def test():
 
-    img_path1 = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
-    img_path2 = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/side.png'
-    img_path3 = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/sidee.png' 
+    img_path1 = 'C:/Users/Rafael/Desktop/Exampel/side.png'
+    img_path2 = 'C:/Users/Rafael/Desktop/Exampel/sidee.png'
+    img_path3 = 'C:/Users/Rafael/Desktop/Exampel/front.png' 
 
     # detect
     keypoints1, descriptors1 = detect_and_describe_akaze(img_path1)

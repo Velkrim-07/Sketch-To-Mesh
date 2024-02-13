@@ -220,8 +220,23 @@ class Reset_Input_Images(bpy.types.Operator):
             #deletes the image plane in the array
             bpy.ops.object.delete(use_global=False, confirm=False)
         return {'FINISHED'}
+    
+from .db_operations import save_file_to_db # the . is on purpose. do not remove
+class StMTestSaveFileToDb(bpy.types.Operator):
+    bl_idname = "wm.save_file_to_db_operator"
+    bl_label = "Test Saving File"
 
+    def execute(self, context):
+        
+        save_file_to_db()
+        
+        #success = prepare_image(path)
+        #if success:
+        #    self.report({'INFO'}, "Image Prep Succesful!")
+        #else:
+        #    self.report({'ERROR'}, "Failed to Image Prep.")
 
+        return {'FINISHED'}
 
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
@@ -261,7 +276,6 @@ class DoImg(bpy.types.Operator):
         # Open a file browser to select a file
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
 
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
@@ -399,6 +413,13 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row = layout.row()
         row.operator("wm.database_login_popup", text="Access Database")
         
+         row = layout.row()
+        row.operator("wm.prepare_image_operator", text="Test Image Prep")
+        
+         row = layout.row()
+        row.operator("wm.save_file_to_db_operator", text="Save File to DB")
+ 
+        
         #row = layout.row()
         #row.operator("wm.prepare_image_operator", text="Test Image Prep")
 
@@ -431,6 +452,9 @@ def register():
    # db test connection and image prep
 #    bpy.utils.register_class(StMTestImagePrep)  
 
+    # StMTestSaveFileToDb
+    bpy.utils.register_class(StMTestSaveFileToDb) 
+
 
 def unregister():
     del bpy.types.Scene.front_views_file_path
@@ -456,6 +480,9 @@ def unregister():
 
     # db test connection and image prep
 #    bpy.utils.unregister_class(StMTestImagePrep)
+
+    #StMTestSaveFileToDb
+    bpy.utils.unregister_class(StMTestSaveFileToDb)
 
 if __name__ == "__main__":
     register()
