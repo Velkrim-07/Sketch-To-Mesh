@@ -10,15 +10,11 @@ bl_info = {
 
     # 3D Viewport area (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/space_type_items.html#rna-enum-space-type-items)
     # Sidebar region (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/region_type_items.html#rna-enum-region-type-items)
-
+    
 import bpy
-
 from .db_operations import test_connection
 
-
-
-
-        ###this is a example class ###
+        ### this is a example class ###
 class ExampleOperator(bpy.types.Operator):
     bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
     bl_label = "Load Image"
@@ -62,17 +58,37 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
         layout = self.layout
 
 # class that executes test_connection from db_operations
+# will be deleted in beta versions
+
 class StMTestConnectionOperator(bpy.types.Operator):
     bl_idname = "wm.test_connection_operator"
     bl_label = "Test Database Connection"
 
     def execute(self, context):
-        # Call the test_connection function
+        
         success = test_connection()
         if success:
             self.report({'INFO'}, "Connection to MongoDB successful!")
         else:
             self.report({'ERROR'}, "Failed to connect to MongoDB.")
+
+        return {'FINISHED'}
+
+# import cv2
+from .image_processing import test # the . is on purpose. do not remove
+class StMTestImagePrep(bpy.types.Operator):
+    bl_idname = "wm.prepare_image_operator"
+    bl_label = "Test Image Prep"
+
+    def execute(self, context):
+        
+        test()
+        
+        #success = prepare_image(path)
+        #if success:
+        #    self.report({'INFO'}, "Image Prep Succesful!")
+        #else:
+        #    self.report({'ERROR'}, "Failed to Image Prep.")
 
         return {'FINISHED'}
      
@@ -97,6 +113,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("wm.test_connection_operator", text="Test Connection")
+        row.operator("wm.prepare_image_operator", text="Test Image Prep")
         
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
@@ -154,9 +171,9 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
-    # db and test connection
-    bpy.utils.register_class(StMTestConnectionOperator)
-    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
+   # db test connection and image prep
+    bpy.utils.register_class(StMTestConnectionOperator) 
+    bpy.utils.register_class(StMTestImagePrep)  
 
 
 def unregister():
@@ -171,10 +188,9 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
-    # db and test connection
+    # db test connection and image prep
+    bpy.utils.unregister_class(StMTestImagePrep)
     bpy.utils.unregister_class(StMTestConnectionOperator)
-    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
-
 
 if __name__ == "__main__":
     register()
