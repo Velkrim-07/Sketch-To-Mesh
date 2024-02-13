@@ -15,8 +15,8 @@ import cv2
 import numpy as np
 import os
 from dataclasses import dataclass
-from .db_operations import test_connection
-from .image_processing import prepare_image # the . is on purpose. do not remove
+from .db_operations import test_connection, save_file_to_db
+from .image_processing import prepare_image, test # the . is on purpose. do not remove
 #this import is not used yet
 # from typing import Set 
 
@@ -228,7 +228,7 @@ class StMTestSaveFileToDb(bpy.types.Operator):
 
     def execute(self, context):
         
-        save_file_to_db()
+        save_file_to_db("123") # needs a file path but are not using
         
         #success = prepare_image(path)
         #if success:
@@ -413,15 +413,12 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row = layout.row()
         row.operator("wm.database_login_popup", text="Access Database")
         
-         row = layout.row()
+        row = layout.row()
         row.operator("wm.prepare_image_operator", text="Test Image Prep")
         
-         row = layout.row()
+        row = layout.row()
         row.operator("wm.save_file_to_db_operator", text="Save File to DB")
- 
-        
-        #row = layout.row()
-        #row.operator("wm.prepare_image_operator", text="Test Image Prep")
+
 
 
 
@@ -449,8 +446,8 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.register_class(StMTestConnectionOperator) 
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
-   # db test connection and image prep
-#    bpy.utils.register_class(StMTestImagePrep)  
+    # db test connection and image prep
+    bpy.utils.register_class(StMTestImagePrep)  
 
     # StMTestSaveFileToDb
     bpy.utils.register_class(StMTestSaveFileToDb) 
@@ -479,7 +476,7 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
     # db test connection and image prep
-#    bpy.utils.unregister_class(StMTestImagePrep)
+    bpy.utils.unregister_class(StMTestImagePrep)
 
     #StMTestSaveFileToDb
     bpy.utils.unregister_class(StMTestSaveFileToDb)
