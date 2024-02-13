@@ -13,6 +13,7 @@ bl_info = {
 import bpy
 import cv2
 import numpy as np
+import math
 import os
 from dataclasses import dataclass
 from .db_operations import test_connection
@@ -20,23 +21,23 @@ from .image_processing import prepare_image # the . is on purpose. do not remove
 #this import is not used yet
 # from typing import Set 
 
+#FutureReference
+#this will contain the filepath and the image plane name
+#this has not been implemented yet
+@dataclass
+class FilePathStructure:
+    filePath: str
+    ImagePlaneName: str
+
+GlobalFileImageStructArray = [] #this will eventually replace the two array under this
 globalPlaneArray = [] # a list of the names of the planes in Blender
 globalfilePathsArray = [] # a list of the file path we wan to keep track of
 
-#FutureReference
-#@dataclass
-#class FilePathStructure:
-    #filePath: bpy.props.StringProperty(subtype="FILE_PATH")
-    #Description: str
-
-    # import cv2
-from .image_processing import prepare_image # the . is on purpose. do not remove
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
 
     def execute(self, context):
-        
         path = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
         success = prepare_image(path)
         if success:
@@ -45,6 +46,7 @@ class StMTestImagePrep(bpy.types.Operator):
             self.report({'ERROR'}, "Failed to Image Prep.")
 
         return {'FINISHED'}
+
 
 
 def outline_image(image_path, Extension, ImgName, Filedirectory):
@@ -112,8 +114,6 @@ class PlaceImageIn3D(bpy.types.Operator):
     filePathsArray = globalfilePathsArray
 
     def execute(self, context):
-        # holds the rotation for each View
-        RotationValue = (0, 0, 0) 
         #this will keep count of the views were have captured
         Itervalue = 0
         #this will be a folder in the sketch-to-Mesh project. This will hold the Image processed
@@ -123,15 +123,9 @@ class PlaceImageIn3D(bpy.types.Operator):
         filePathsArray = [bpy.context.scene.front_views_file_path, bpy.context.scene.back_views_file_path,  bpy.context.scene.side_views_file_path ]
     
         for file_path in filePathsArray : 
-            if file_path:
+            if file_path :
                 #this is used for the new image. We want to save the new image as the same type of file as the first
                 Extension =  file_path[file_path.rfind("."): ] 
-
-                # this decides depending on the view the rotation of the plane object
-                match Itervalue :
-                    case 0: RotationValue = (90, 0, 0)
-                    case 1: RotationValue = (90, 90, 0)
-                    case 2: RotationValue = (0, 0, 0)
 
                 #this is the file name for the image we are creating
                 ImgName = "View" + str(Itervalue)
@@ -154,8 +148,7 @@ class PlaceImageIn3D(bpy.types.Operator):
                     bpy.data.objects[ImgName].select_set(True)
                     match Itervalue :
                         case 1: bpy.ops.transform.translate(value=(-0.01, 0 , 0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, True, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False, alt_navigation=True)
-                        case 2:bpy.context.object.rotation_euler[2] = 0
-                    
+                        case 2: bpy.context.object.rotation_euler[2] = 0
                 else:
                     match Itervalue:
                         case 0: MissingView = "FontView"
@@ -164,6 +157,7 @@ class PlaceImageIn3D(bpy.types.Operator):
 
                     self.report({'ERROR'}, "No inputted Image for" + MissingView)
                 Itervalue = Itervalue + 1
+
             else:
                 self.report({'ERROR'}, "No inputted Image.")
                 Itervalue = Itervalue + 1
@@ -223,7 +217,6 @@ class Reset_Input_Images(bpy.types.Operator):
         for filePath in self.myFilePathArray :
             #Finds the Images Saved
             ImageFilePath = os.path.abspath("ImageFolder\\" + "View" + str(Itervalue) + filePath[filePath.rfind("."): ] ) 
-
             # if we find that file we will delete it
             if ImageFilePath:
                 os.remove(ImageFilePath)
@@ -238,7 +231,6 @@ class Reset_Input_Images(bpy.types.Operator):
 
      
 
-
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
     bl_idname = "_PT_Views"
@@ -248,24 +240,14 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        
         row = layout.row()
         row.prop(context.scene, "front_views_file_path", text="Front View")
-       
         row = layout.row()
         row.prop(context.scene, "back_views_file_path", text="Back View")
-
         row = layout.row()
         row.prop(context.scene, "side_views_file_path", text="Side View")
-
         row = layout.row()
         row.operator("object.reset_selected_images", text="Reset Images")
-
-        row = layout.row()
-        row.operator("wm.test_connection_operator", text="Test Connection")
-
-        #row = layout.row()
-        #row.operator("wm.prepare_image_operator", text="Test Image Prep")
 
 
 
@@ -292,7 +274,7 @@ class DoImg(bpy.types.Operator):
 
 
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
-    bl_label = "AlignViews"
+    bl_label = "Align_Location"
     bl_idname = "_PT_AlignViews"
     bl_parent_id = "_PT_Views"
     bl_space_type = 'VIEW_3D'
@@ -302,6 +284,70 @@ class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):
         layout = self.layout
         row = layout.row()
         row.operator("object.place_image_in_space", text="Align Image")
+
+
+class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel(bpy.types.Panel):  
+    bl_label = "Align Location"
+    bl_idname = "_PT_rotation_align_plane"
+    bl_parent_id = "_PT_AlignViews"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+
+    ImagePlanes = globalPlaneArray
+
+    def draw(self, context):
+        layout = self.layout
+
+        for images in self.ImagePlanes:
+            #display midpoint
+            obj = bpy.data.objects.get(images)
+            #deletes the image plane in the array
+            if obj:
+                location = obj.location  #Access the location attribute
+
+                bpy.types.Scene.LocationX = bpy.props.StringProperty(name="LocationX", default=location.x)
+                row = layout.row()
+                row.prop(context.scene, "LocationX", text="X Location: ")
+                bpy.types.Scene.LocationY = bpy.props.StringProperty(name="LocationY", default=location.y)
+                row = layout.row()
+                row.prop(context.scene, "LocationY", text="Y Location: ")
+                bpy.types.Scene.LocationZ = bpy.props.StringProperty(name="LocationZ", default=location.z)
+                row = layout.row()
+                row.prop(context.scene, "LocationZ", text="Z Location: ")
+
+
+
+class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Rotation_Panel(bpy.types.Panel):  
+    bl_label = "Align Rotation"
+    bl_idname = "_PT_rotation_align_plane"
+    bl_parent_id = "_PT_AlignViews"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+
+    ImagePlanes = globalPlaneArray
+
+    def draw(self, context):
+        layout = self.layout
+
+        for images in self.ImagePlanes:
+            #display midpoint
+            obj = bpy.data.objects.get(images)
+            #deletes the image plane in the array
+            if obj:
+                # Access the location attribute
+                rotation_euler = obj.rotation_euler
+                #Convert radians to degrees for better readability
+                rotation_degrees = [math.degrees(angle) for angle in rotation_euler]
+
+                bpy.types.Scene.RotationX = bpy.props.StringProperty(name="FileName", default=rotation_degrees[0])
+                row = layout.row()
+                row.prop(context.scene, "RotationX", text="X Rotation: ")
+                bpy.types.Scene.RotationY = bpy.props.StringProperty(name="FileName", default=rotation_degrees[1])
+                row = layout.row()
+                row.prop(context.scene, "RotationY", text="Y Rotation: ")
+                bpy.types.Scene.RotationZ = bpy.props.StringProperty(name="FileName", default=rotation_degrees[2])
+                row = layout.row()
+                row.prop(context.scene, "RotationZ", text="Z Rotation: ")
 
        
 
@@ -359,8 +405,25 @@ class ExampleOperator(bpy.types.Operator):
     #there need to be called in the register and unregister definetions respectively close to the bottom of the script
     #bpy.utils.register_class(LoadImageOperator) 
     #bpy.utils.unregister_class(LoadImageOperator)
+    ###this is the end of the example class ###
 
-###this is the end of the example class ###
+
+
+class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel(bpy.types.Panel):  
+    bl_label = "Testing"
+    bl_idname = "_PT_Testing_Panel"
+    bl_parent_id = "_PT_Sketch_To_Mesh_Main_Panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+
+    def draw(self, context):
+        layout = self.layout
+
+        row = layout.row()
+        row.operator("wm.test_connection_operator", text="Test Connection")\
+        
+        #row = layout.row()
+        #row.operator("wm.prepare_image_operator", text="Test Image Prep")
 
 
 
@@ -379,6 +442,8 @@ def register():
     bpy.utils.register_class(PlaceImageIn3D)
     bpy.utils.register_class(DoImg)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
+    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
+    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Rotation_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
    # db test connection and image prep
     bpy.utils.register_class(StMTestConnectionOperator) 
@@ -400,6 +465,8 @@ def unregister():
     bpy.utils.unregister_class(PlaceImageIn3D)
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
+    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
+    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Rotation_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
 
     # db test connection and image prep
