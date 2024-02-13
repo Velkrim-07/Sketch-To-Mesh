@@ -35,7 +35,8 @@ globalfilePathsArray = [] # a list of the file path we wan to keep track of
 UserSignedIn = False
 
 
-  
+
+    
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
@@ -160,7 +161,7 @@ class PlaceImageIn3D(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
+   
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
 # first create the operator 
@@ -290,37 +291,6 @@ class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):
         row.operator("object.place_image_in_space", text="Align Image")
 
 
-
-# class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel(bpy.types.Panel):  
-#     bl_label = "Align Location"
-#     bl_idname = "_PT_rotation_align_plane"
-#     bl_parent_id = "_PT_AlignViews"
-#     bl_space_type = 'VIEW_3D'
-#     bl_region_type = 'UI'
-
-#     ImagePlanes = globalPlaneArray
-
-#     def draw(self, context):
-#         layout = self.layout
-
-#         for images in self.ImagePlanes:
-#             #display midpoint
-#             obj = bpy.data.objects.get(images)
-#             #deletes the image plane in the array
-#             if obj:
-#                 location = obj.location  #Access the location attribute
-#                 bpy.types.Scene.LocationX = bpy.props.StringProperty(name="LocationX", default=location.x)
-#                 row = layout.row()
-#                 row.prop(context.scene, "LocationX", text="X Location: ")
-#                 bpy.types.Scene.LocationY = bpy.props.StringProperty(name="LocationY", default=location.y)
-#                 row = layout.row()
-#                 row.prop(context.scene, "LocationY", text="Y Location: ")
-#                 bpy.types.Scene.LocationZ = bpy.props.StringProperty(name="LocationZ", default=location.z)
-#                 row = layout.row()
-#                 row.prop(context.scene, "LocationZ", text="Z Location: ")
-
-
-
 class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):  
     bl_label = "MeshSettings"
     bl_idname = "_PT_MeshSettings"
@@ -375,12 +345,22 @@ class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login_popup"
     bl_label = "Test Image Prep"
 
-    DBUserNameInput = bpy.props.StringProperty(name="DB_UserName", default="")
-    DBPasswordInput = bpy.props.StringProperty(name="DB_Password", default="")
+    DBUserNameInput = ""
+    DBPasswordInput = ""
 
     def execute(self, context):
         # this will send the information to the database
+        self.DBUserNameInput = bpy.context.scene.DB_Username
+        self.DBPasswordInput = bpy.context.scene.DB_Password# password will be encrypted
         return {'FINISHED'}
+    
+    def draw(self, context):    
+        layout = self.layout   
+        row = layout.row()
+        row.prop(context.scene, "DB_Username", text="User Name: ", slider=True) 
+        row = layout.row()
+        row.prop(context.scene, "DB_Password", text="Password: ", slider=True) 
+
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -421,8 +401,13 @@ def register():
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Image Center Y", default=10, min=0, max=100)
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
-
+    
     #Database Properties
+    bpy.types.Scene.DB_Username = bpy.props.StringProperty(name="DBUsername", default="")
+    bpy.types.Scene.DB_Password = bpy.props.StringProperty(name="DBPassword", default="")
+
+
+
     bpy.utils.register_class(DataBaseLogin)
     bpy.utils.register_class(Reset_Input_Images)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
@@ -464,10 +449,10 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
     # db test connection and image prep
-
     bpy.utils.unregister_class(StMTestImagePrep)
-    bpy.utils.unregister_class(StMTestSaveFileToDb)
 
+    #StMTestSaveFileToDb
+    bpy.utils.unregister_class(StMTestSaveFileToDb)
 
 if __name__ == "__main__":
     register()
