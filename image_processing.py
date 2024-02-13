@@ -81,7 +81,7 @@ def detect_and_describe_akaze(image_path):
     
     return keypoints, descriptors
 
-def test():
+def test_feature_detection():
 
     img_path1 = 'C:/Users/Rafael/Desktop/Exampel/side.png'
     img_path2 = 'C:/Users/Rafael/Desktop/Exampel/sidee.png'

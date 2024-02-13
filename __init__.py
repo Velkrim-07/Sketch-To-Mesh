@@ -9,6 +9,7 @@ bl_info = {
 }
     # 3D Viewport area (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/space_type_items.html#rna-enum-space-type-items)
     # Sidebar region (find list of values here https://docs.blender.org/api/current/bpy_types_enum_items/region_type_items.html#rna-enum-region-type-items)
+    # bpy.ops.wm.save_as_mainfile(filepath="c:\Users\James Burns\Documents\TestFile.blend")
     
 import bpy
 import cv2
@@ -16,7 +17,7 @@ import numpy as np
 import os
 from dataclasses import dataclass
 from .db_operations import test_connection, save_file_to_db
-from .image_processing import prepare_image, test # the . is on purpose. do not remove
+from .image_processing import prepare_image, test_feature_detection # the . is on purpose. do not remove
 #this import is not used yet
 # from typing import Set 
 
@@ -32,7 +33,7 @@ GlobalFileImageStructArray = [] #this will eventually replace the two array unde
 globalPlaneArray = [] # a list of the names of the planes in Blender
 globalfilePathsArray = [] # a list of the file path we wan to keep track of
 UserSignedIn = False
-midPoint = [0,0,0]
+
 
 
     
@@ -41,7 +42,7 @@ class StMTestImagePrep(bpy.types.Operator):
     bl_label = "Test Image Prep"
 
     def execute(self, context):
-        test()
+        test_feature_detection()
         
         #success = prepare_image(path)
         #if success:
@@ -138,8 +139,6 @@ class PlaceImageIn3D(bpy.types.Operator):
                 if NewFilePath:
                     filename = os.path.basename(NewFilePath)
                     FileDirectory = NewFilePath[: NewFilePath.rfind("\\")] + "\\"
-
-                    bpy.context.scene.cursor_location = midPoint
                     #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     #we set the rotation and location of each plane
@@ -285,49 +284,40 @@ class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
 
-    CenterPoint = midPoint
-
-    def excute(self, context):
-        bpy.data.objects[bpy.context.scene.MidPoint_Name].select_set(True)
-        self.CenterPoint = bpy.ops.object.location
-         
-
     def draw(self, context):
         layout = self.layout
-        row = layout.row()
-        layout.prop(context.scene, "MidPoint_Name", text="")
         row = layout.row()
         row.operator("object.place_image_in_space", text="Align Image")
 
 
 
-class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel(bpy.types.Panel):  
-    bl_label = "Align Location"
-    bl_idname = "_PT_rotation_align_plane"
-    bl_parent_id = "_PT_AlignViews"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
+# class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel(bpy.types.Panel):  
+#     bl_label = "Align Location"
+#     bl_idname = "_PT_rotation_align_plane"
+#     bl_parent_id = "_PT_AlignViews"
+#     bl_space_type = 'VIEW_3D'
+#     bl_region_type = 'UI'
 
-    ImagePlanes = globalPlaneArray
+#     ImagePlanes = globalPlaneArray
 
-    def draw(self, context):
-        layout = self.layout
+#     def draw(self, context):
+#         layout = self.layout
 
-        for images in self.ImagePlanes:
-            #display midpoint
-            obj = bpy.data.objects.get(images)
-            #deletes the image plane in the array
-            if obj:
-                location = obj.location  #Access the location attribute
-                bpy.types.Scene.LocationX = bpy.props.StringProperty(name="LocationX", default=location.x)
-                row = layout.row()
-                row.prop(context.scene, "LocationX", text="X Location: ")
-                bpy.types.Scene.LocationY = bpy.props.StringProperty(name="LocationY", default=location.y)
-                row = layout.row()
-                row.prop(context.scene, "LocationY", text="Y Location: ")
-                bpy.types.Scene.LocationZ = bpy.props.StringProperty(name="LocationZ", default=location.z)
-                row = layout.row()
-                row.prop(context.scene, "LocationZ", text="Z Location: ")
+#         for images in self.ImagePlanes:
+#             #display midpoint
+#             obj = bpy.data.objects.get(images)
+#             #deletes the image plane in the array
+#             if obj:
+#                 location = obj.location  #Access the location attribute
+#                 bpy.types.Scene.LocationX = bpy.props.StringProperty(name="LocationX", default=location.x)
+#                 row = layout.row()
+#                 row.prop(context.scene, "LocationX", text="X Location: ")
+#                 bpy.types.Scene.LocationY = bpy.props.StringProperty(name="LocationY", default=location.y)
+#                 row = layout.row()
+#                 row.prop(context.scene, "LocationY", text="Y Location: ")
+#                 bpy.types.Scene.LocationZ = bpy.props.StringProperty(name="LocationZ", default=location.z)
+#                 row = layout.row()
+#                 row.prop(context.scene, "LocationZ", text="Z Location: ")
 
 
 
@@ -431,8 +421,6 @@ def register():
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Image Center Y", default=10, min=0, max=100)
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
-    #midPoint Object
-    bpy.types.Scene.MidPoint_Name = bpy.props.StringProperty(name="Midpoint", default="")
     
     #Database Properties
     bpy.utils.register_class(DataBaseLogin)
@@ -442,7 +430,7 @@ def register():
     bpy.utils.register_class(PlaceImageIn3D)
     bpy.utils.register_class(DoImg)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
-    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
+    # bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.register_class(StMTestConnectionOperator) 
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
@@ -470,7 +458,7 @@ def unregister():
     bpy.utils.unregister_class(PlaceImageIn3D)
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
-    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
+    #bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
