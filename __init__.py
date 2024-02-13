@@ -35,8 +35,7 @@ globalfilePathsArray = [] # a list of the file path we wan to keep track of
 UserSignedIn = False
 
 
-
-    
+  
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
@@ -139,6 +138,7 @@ class PlaceImageIn3D(bpy.types.Operator):
                 if NewFilePath:
                     filename = os.path.basename(NewFilePath)
                     FileDirectory = NewFilePath[: NewFilePath.rfind("\\")] + "\\"
+
                     #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     #we set the rotation and location of each plane
@@ -158,9 +158,9 @@ class PlaceImageIn3D(bpy.types.Operator):
                 Itervalue = Itervalue + 1
 
         return {'FINISHED'}
-    
 
-   
+
+
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
 # first create the operator 
@@ -421,7 +421,7 @@ def register():
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Image Center Y", default=10, min=0, max=100)
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
-    
+
     #Database Properties
     bpy.utils.register_class(DataBaseLogin)
     bpy.utils.register_class(Reset_Input_Images)
@@ -464,10 +464,10 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
     # db test connection and image prep
-    bpy.utils.unregister_class(StMTestImagePrep)
 
-    #StMTestSaveFileToDb
+    bpy.utils.unregister_class(StMTestImagePrep)
     bpy.utils.unregister_class(StMTestSaveFileToDb)
+
 
 if __name__ == "__main__":
     register()
