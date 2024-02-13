@@ -32,10 +32,9 @@ GlobalFileImageStructArray = [] #this will eventually replace the two array unde
 globalPlaneArray = [] # a list of the names of the planes in Blender
 globalfilePathsArray = [] # a list of the file path we wan to keep track of
 UserSignedIn = False
-midPoint = [0,0,0]
 
 
-    
+  
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
@@ -139,7 +138,6 @@ class PlaceImageIn3D(bpy.types.Operator):
                     filename = os.path.basename(NewFilePath)
                     FileDirectory = NewFilePath[: NewFilePath.rfind("\\")] + "\\"
 
-                    bpy.context.scene.cursor_location = midPoint
                     #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     #we set the rotation and location of each plane
@@ -159,9 +157,9 @@ class PlaceImageIn3D(bpy.types.Operator):
                 Itervalue = Itervalue + 1
 
         return {'FINISHED'}
-    
 
-   
+
+
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
 # first create the operator 
@@ -270,18 +268,9 @@ class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):
     bl_parent_id = "_PT_Views"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-
-    CenterPoint = midPoint
-
-    def excute(self, context):
-        bpy.data.objects[bpy.context.scene.MidPoint_Name].select_set(True)
-        self.CenterPoint = bpy.ops.object.location
          
-
     def draw(self, context):
         layout = self.layout
-        row = layout.row()
-        layout.prop(context.scene, "MidPoint_Name", text="")
         row = layout.row()
         row.operator("object.place_image_in_space", text="Align Image")
 
@@ -415,7 +404,7 @@ def register():
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
     #midPoint Object
     bpy.types.Scene.MidPoint_Name = bpy.props.StringProperty(name="Midpoint", default="")
-    
+
     #Database Properties
     bpy.utils.register_class(DataBaseLogin)
     bpy.utils.register_class(Reset_Input_Images)
@@ -455,7 +444,7 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
     # db test connection and image prep
-#    bpy.utils.unregister_class(StMTestImagePrep)
+    # bpy.utils.unregister_class(StMTestImagePrep)
 
 if __name__ == "__main__":
     register()
