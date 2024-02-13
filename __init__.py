@@ -75,19 +75,20 @@ class StMTestConnectionOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 # import cv2
-from .image_processing import prepare_image # the . is on purpose. do not remove
+from .image_processing import test # the . is on purpose. do not remove
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
 
     def execute(self, context):
         
-        path = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
-        success = prepare_image(path)
-        if success:
-            self.report({'INFO'}, "Image Prep Succesful!")
-        else:
-            self.report({'ERROR'}, "Failed to Image Prep.")
+        test()
+        
+        #success = prepare_image(path)
+        #if success:
+        #    self.report({'INFO'}, "Image Prep Succesful!")
+        #else:
+        #    self.report({'ERROR'}, "Failed to Image Prep.")
 
         return {'FINISHED'}
      
