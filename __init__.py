@@ -51,7 +51,7 @@ class StMTestImagePrep(bpy.types.Operator):
         #    self.report({'ERROR'}, "Failed to Image Prep.")
 
 
-
+# wth is this? why is this here and not in a proper file? why does this method even exists? sigh.
 def outline_image(image_path, Extension, ImgName, Filedirectory):
     """Read an image from a path, outline it, calculate the center of mass for the outlines, and draw a blue dot there."""
     image = cv2.imread(image_path)
@@ -193,8 +193,6 @@ class StMTestConnectionOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Failed to connect to MongoDB.")
         return {'FINISHED'}
 
-
-
 class Reset_Input_Images(bpy.types.Operator): 
     bl_idname = "object.reset_selected_images"
     bl_label = "Reset_Images"
@@ -219,23 +217,6 @@ class Reset_Input_Images(bpy.types.Operator):
             bpy.data.objects[images].select_set(True)
             #deletes the image plane in the array
             bpy.ops.object.delete(use_global=False, confirm=False)
-        return {'FINISHED'}
-    
-from .db_operations import save_file_to_db # the . is on purpose. do not remove
-class StMTestSaveFileToDb(bpy.types.Operator):
-    bl_idname = "wm.save_file_to_db_operator"
-    bl_label = "Test Saving File"
-
-    def execute(self, context):
-        
-        save_file_to_db("123") # needs a file path but are not using
-        
-        #success = prepare_image(path)
-        #if success:
-        #    self.report({'INFO'}, "Image Prep Succesful!")
-        #else:
-        #    self.report({'ERROR'}, "Failed to Image Prep.")
-
         return {'FINISHED'}
 
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
@@ -339,8 +320,6 @@ class ExampleOperator(bpy.types.Operator):
     #bpy.utils.unregister_class(LoadImageOperator)
     ###this is the end of the example class ###
 
-
-
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login_popup"
     bl_label = "Test Image Prep"
@@ -365,7 +344,52 @@ class DataBaseLogin(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
+from .db_operations import save_file_to_db # the . is on purpose. do not remove
+class StMTestSaveFileToDb(bpy.types.Operator):
+    bl_idname = "wm.save_file_to_db_operator"
+    bl_label = "Test Saving File"
 
+    def execute(self, context):
+        
+        save_file_to_db("123") # needs a file path but are not using
+
+        return {'FINISHED'}
+    
+    
+from .db_operations import get_files_by_user_id # the . is on purpose. do not remove
+class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
+    bl_idname = "wm.get_file_from_db_operator"
+    bl_label = "Test Getting File"
+
+    def execute(self, context):
+        
+        result = get_files_by_user_id("123") # 123 since the only document in the db is 123
+        
+        for document in result:
+            # removed the bin data because it was too annoying as the output. fileEncoded: {document['fileEncoded']}
+            print(f"objectId: {document['_id']}, filename: {document['fileName']}, userId: {document['userId']}, insertedDate: {document['insertedDate']}")
+
+        return {'FINISHED'}
+    
+from .db_operations import delete_files_by_object_id # the . is on purpose. do not remove
+class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
+    bl_idname = "wm.delete_file_from_db_operator"
+    bl_label = "Test Deleting File"
+
+    def execute(self, context):
+        
+        objectId = "65ccec75d26b1d7703fb3a0a"
+        result = delete_files_by_object_id(objectId) # 123 since the only document in the db is 123
+        
+        if (result == 0):
+            print("No files deleted. Check ObjectID")
+
+        if (result == 1):
+            print(f"objectId: {objectId} file successfully deleted.")
+            self.report({'INFO'}, "File successfully deleted.")
+        
+
+        return {'FINISHED'}
 
 class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):  
     bl_label = "Testing"
@@ -388,6 +412,12 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         
         row = layout.row()
         row.operator("wm.save_file_to_db_operator", text="Save File to DB")
+
+        row = layout.row()
+        row.operator("wm.get_file_from_db_operator", text="Get File from DB")
+
+        row = layout.row()
+        row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
 
 
 
@@ -417,13 +447,14 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
     # bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
-    bpy.utils.register_class(StMTestConnectionOperator) 
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
-    # db test connection and image prep
+    
+    # Tests
     bpy.utils.register_class(StMTestImagePrep)  
-
-    # StMTestSaveFileToDb
     bpy.utils.register_class(StMTestSaveFileToDb) 
+    bpy.utils.register_class(StMTestConnectionOperator) 
+    bpy.utils.register_class(StMTestGetFileFromDbFromUserId) 
+    bpy.utils.register_class(StMTestDeleteFileFromDbFromUserId) 
 
 
 def unregister():
@@ -445,14 +476,14 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     #bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
-    bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
-    # db test connection and image prep
+    # Tests
     bpy.utils.unregister_class(StMTestImagePrep)
-
-    #StMTestSaveFileToDb
+    bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(StMTestSaveFileToDb)
+    bpy.utils.unregister_class(StMTestGetFileFromDbFromUserId)
+    bpy.utils.unregister_class(StMTestDeleteFileFromDbFromUserId) 
 
 if __name__ == "__main__":
     register()
