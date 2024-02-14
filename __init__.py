@@ -336,9 +336,9 @@ class DataBaseLogin(bpy.types.Operator):
     def draw(self, context):    
         layout = self.layout   
         row = layout.row()
-        row.prop(context.scene, "DB_Username", text="User Name: ", slider=True) 
+        row.prop(context.scene, "DB_Username", text="Username", slider=True) 
         row = layout.row()
-        row.prop(context.scene, "DB_Password", text="Password: ", slider=True) 
+        row.prop(context.scene, "DB_Password", text="Password", slider=True) 
 
 
     def invoke(self, context, event):
