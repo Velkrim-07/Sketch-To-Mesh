@@ -322,7 +322,7 @@ class ExampleOperator(bpy.types.Operator):
 
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login_popup"
-    bl_label = "Test Image Prep"
+    bl_label = "Database Register/Login"
 
     DBUserNameInput = ""
     DBPasswordInput = ""
