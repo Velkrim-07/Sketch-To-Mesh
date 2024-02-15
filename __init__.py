@@ -15,11 +15,13 @@ import bpy
 import cv2
 import numpy as np
 import os
+
 from dataclasses import dataclass
-from .db_operations import test_connection, save_file_to_db
+from .db_operations import test_connection, save_file_to_db, get_files_by_user_id, delete_files_by_object_id # the . is on purpose. do not remove
 from .image_processing import prepare_image, test_feature_detection # the . is on purpose. do not remove
-#this import is not used yet
-# from typing import Set 
+from .bcrypt_password import hash_password
+from .authentication import login_account, register_account
+import bcrypt # unsure
 
 #FutureReference
 #this will contain the filepath and the image plane name
@@ -56,7 +58,7 @@ class StMTestImagePrep(bpy.types.Operator):
         #    self.report({'ERROR'}, "Failed to Image Prep.")
 
 
-
+# wth is this? why is this here and not in a proper file? why does this method even exists? sigh.
 def outline_image(image_path, Extension, ImgName, Filedirectory):
     """Read an image from a path, outline it, calculate the center of mass for the outlines, and draw a blue dot there."""
     image = cv2.imread(image_path)
@@ -190,8 +192,6 @@ class StMTestConnectionOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Failed to connect to MongoDB.")
         return {'FINISHED'}
 
-
-
 class Reset_Input_Images(bpy.types.Operator): 
     bl_idname = "object.reset_selected_images"
     bl_label = "Reset_Images"
@@ -214,24 +214,6 @@ class Reset_Input_Images(bpy.types.Operator):
         # clears the PlaneData Array
         GlobalPlaneDataArray.clear() 
         return {'FINISHED'}
-    
-
-
-class StMTestSaveFileToDb(bpy.types.Operator):
-    bl_idname = "wm.save_file_to_db_operator"
-    bl_label = "Test Saving File"
-
-    def execute(self, context):
-        save_file_to_db("123") # needs a file path but are not using
-        
-        #success = prepare_image(path)
-        #if success:
-        #    self.report({'INFO'}, "Image Prep Succesful!")
-        #else:
-        #    self.report({'ERROR'}, "Failed to Image Prep.")
-
-        return {'FINISHED'}
-    
 
 # Operator to add a new plane item
 class OBJECT_OT_add_plane_item(bpy.types.Operator):
@@ -281,8 +263,8 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("object.reset_selected_images", text="Reset Images")
 
-
-
+        
+        
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
     bl_idname = "_PT_Views"
@@ -360,11 +342,11 @@ class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("mesh.primitive_cube_add", text="Export Mesh")
 
-
-
+        
+        
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login_popup"
-    bl_label = "Test Image Prep"
+    bl_label = "Database Register/Login"
 
     DBUserNameInput = ""
     DBPasswordInput = ""
@@ -372,20 +354,89 @@ class DataBaseLogin(bpy.types.Operator):
     def execute(self, context):
         # this will send the information to the database
         self.DBUserNameInput = bpy.context.scene.DB_Username
-        self.DBPasswordInput = bpy.context.scene.DB_Password# password will be encrypted
+        self.DBPasswordInput = hash_password(bpy.context.scene.DB_Password.encode('utf-8')) # being sent to encryption as bytes. never stored as string!
+        
+        # now we register/login
+        # we try to login first. if none exist, we register it.
+        register_result = register_account(self.DBUserNameInput, self.DBPasswordInput)
+        
+        # currently like this. once we have a new button it will be easier!
+        # TODO: refactor this.
+        if register_result == -1: # check console error
+            self.report({'INFO'}, "Registration error. Check console for more information.")
+            
+        if register_result == 1: # account/user document created. log in again
+            self.report({'INFO'}, "Registration Successful. Please Log in again to access DB.")
+            
+        if register_result == 0: # account already created. redirect to login
+            byte_password = bpy.context.scene.DB_Password.encode('utf-8') # we need to compare plaintext and the hash! not hash against hash...
+            user, result = login_account(self.DBUserNameInput, byte_password)
+            
+            # will be refactored!
+            if result == 0: # credentials incorrect
+                self.report({'INFO'}, "Credentials Incorrect.")
+            if result == 1:
+                self.report({'INFO'}, "Login Successful.")
+            if result == -1:
+                self.report({'INFO'}, "Unregistered account. Please register")    
+
         return {'FINISHED'}
     
     def draw(self, context):    
         layout = self.layout   
         row = layout.row()
-        row.prop(context.scene, "DB_Username", text="User Name: ", slider=True) 
+        row.prop(context.scene, "DB_Username", text="Username", slider=True) 
         row = layout.row()
-        row.prop(context.scene, "DB_Password", text="Password: ", slider=True) 
+        row.prop(context.scene, "DB_Password", text="Password", slider=True) 
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
+      
+      
+class StMTestSaveFileToDb(bpy.types.Operator):
+    bl_idname = "wm.save_file_to_db_operator"
+    bl_label = "Test Saving File"
 
+    def execute(self, context):
+        
+        save_file_to_db("123") # needs a file path but are not using
+
+        return {'FINISHED'}
+    
+
+class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
+    bl_idname = "wm.get_file_from_db_operator"
+    bl_label = "Test Getting File"
+
+    def execute(self, context):
+        
+        result = get_files_by_user_id("123") # 123 since the only document in the db is 123
+        
+        for document in result:
+            # removed the bin data because it was too annoying as the output. fileEncoded: {document['fileEncoded']}
+            print(f"objectId: {document['_id']}, filename: {document['fileName']}, userId: {document['userId']}, insertedDate: {document['insertedDate']}")
+
+        return {'FINISHED'}
+    
+class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
+    bl_idname = "wm.delete_file_from_db_operator"
+    bl_label = "Test Deleting File"
+
+    def execute(self, context):
+        
+        objectId = "65ccec75d26b1d7703fb3a0a"
+        result = delete_files_by_object_id(objectId) # 123 since the only document in the db is 123
+        
+        if (result == 0):
+            print("No files deleted. Check ObjectID")
+
+        if (result == 1):
+            print(f"objectId: {objectId} file successfully deleted.")
+            self.report({'INFO'}, "File successfully deleted.")
+        
+
+        return {'FINISHED'}
 
 class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):  
     bl_label = "Testing"
@@ -404,6 +455,12 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row.operator("wm.prepare_image_operator", text="Test Image Prep")
         row = layout.row()
         row.operator("wm.save_file_to_db_operator", text="Save File to DB")
+
+        row = layout.row()
+        row.operator("wm.get_file_from_db_operator", text="Get File from DB")
+
+        row = layout.row()
+        row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
 
 
 
@@ -455,12 +512,14 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
     # bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
-    bpy.utils.register_class(StMTestConnectionOperator) 
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
-    # db test connection and image prep
+    
+    # Tests
     bpy.utils.register_class(StMTestImagePrep)  
-    # StMTestSaveFileToDb
     bpy.utils.register_class(StMTestSaveFileToDb) 
+    bpy.utils.register_class(StMTestConnectionOperator) 
+    bpy.utils.register_class(StMTestGetFileFromDbFromUserId) 
+    bpy.utils.register_class(StMTestDeleteFileFromDbFromUserId) 
 
 def unregister():
     del bpy.types.Scene.poly_count_range
@@ -480,12 +539,15 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     #bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
-    bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
     # db test connection and image prep
     bpy.utils.unregister_class(StMTestImagePrep)
-    #StMTestSaveFileToDb
+    # Tests
+    bpy.utils.unregister_class(StMTestImagePrep)
+    bpy.utils.unregister_class(StMTestConnectionOperator)
     bpy.utils.unregister_class(StMTestSaveFileToDb)
+    bpy.utils.unregister_class(StMTestGetFileFromDbFromUserId)
+    bpy.utils.unregister_class(StMTestDeleteFileFromDbFromUserId) 
 
 if __name__ == "__main__":
     register()
