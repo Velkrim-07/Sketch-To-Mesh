@@ -15,11 +15,13 @@ import bpy
 import cv2
 import numpy as np
 import os
+
 from dataclasses import dataclass
-from .db_operations import test_connection, save_file_to_db
+from .db_operations import test_connection, save_file_to_db, get_files_by_user_id, delete_files_by_object_id # the . is on purpose. do not remove
 from .image_processing import prepare_image, test_feature_detection # the . is on purpose. do not remove
-#this import is not used yet
-# from typing import Set 
+from .bcrypt_password import hash_password
+from .authentication import login_account, register_account
+import bcrypt # unsure
 
 #FutureReference
 #this will contain the filepath and the image plane name
@@ -319,7 +321,7 @@ class ExampleOperator(bpy.types.Operator):
     #bpy.utils.register_class(LoadImageOperator) 
     #bpy.utils.unregister_class(LoadImageOperator)
     ###this is the end of the example class ###
-
+    
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login_popup"
     bl_label = "Database Register/Login"
@@ -330,7 +332,32 @@ class DataBaseLogin(bpy.types.Operator):
     def execute(self, context):
         # this will send the information to the database
         self.DBUserNameInput = bpy.context.scene.DB_Username
-        self.DBPasswordInput = bpy.context.scene.DB_Password# password will be encrypted
+        self.DBPasswordInput = hash_password(bpy.context.scene.DB_Password.encode('utf-8')) # being sent to encryption as bytes. never stored as string!
+        
+        # now we register/login
+        # we try to login first. if none exist, we register it.
+        register_result = register_account(self.DBUserNameInput, self.DBPasswordInput)
+        
+        # currently like this. once we have a new button it will be easier!
+        # TODO: refactor this.
+        if register_result == -1: # check console error
+            self.report({'INFO'}, "Registration error. Check console for more information.")
+            
+        if register_result == 1: # account/user document created. log in again
+            self.report({'INFO'}, "Registration Successful. Please Log in again to access DB.")
+            
+        if register_result == 0: # account already created. redirect to login
+            byte_password = bpy.context.scene.DB_Password.encode('utf-8') # we need to compare plaintext and the hash! not hash against hash...
+            user, result = login_account(self.DBUserNameInput, byte_password)
+            
+            # will be refactored!
+            if result == 0: # credentials incorrect
+                self.report({'INFO'}, "Credentials Incorrect.")
+            if result == 1:
+                self.report({'INFO'}, "Login Successful.")
+            if result == -1:
+                self.report({'INFO'}, "Unregistered account. Please register")    
+
         return {'FINISHED'}
     
     def draw(self, context):    
@@ -344,7 +371,6 @@ class DataBaseLogin(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
-from .db_operations import save_file_to_db # the . is on purpose. do not remove
 class StMTestSaveFileToDb(bpy.types.Operator):
     bl_idname = "wm.save_file_to_db_operator"
     bl_label = "Test Saving File"
@@ -355,8 +381,7 @@ class StMTestSaveFileToDb(bpy.types.Operator):
 
         return {'FINISHED'}
     
-    
-from .db_operations import get_files_by_user_id # the . is on purpose. do not remove
+
 class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
     bl_idname = "wm.get_file_from_db_operator"
     bl_label = "Test Getting File"
@@ -371,7 +396,6 @@ class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
 
         return {'FINISHED'}
     
-from .db_operations import delete_files_by_object_id # the . is on purpose. do not remove
 class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
     bl_idname = "wm.delete_file_from_db_operator"
     bl_label = "Test Deleting File"
@@ -435,7 +459,6 @@ def register():
     #Database Properties
     bpy.types.Scene.DB_Username = bpy.props.StringProperty(name="DBUsername", default="")
     bpy.types.Scene.DB_Password = bpy.props.StringProperty(name="DBPassword", default="")
-
 
 
     bpy.utils.register_class(DataBaseLogin)

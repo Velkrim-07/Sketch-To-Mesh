@@ -1,8 +1,10 @@
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
+from pymongo.errors import DuplicateKeyError
+from bson import ObjectId # unsure if needed
+
 from .file_conversion import encode_file, decode_file
 from .db_entities import create_file_document, create_user_document
-from bson import ObjectId # unsure if needed
 
 def connect_to_db():
     
@@ -94,20 +96,34 @@ def delete_files_by_object_id(object_id_delete):
 
     return result.deleted_count # always 0 or 1, because objectId is unique 
 
-# insert users. userEmail HAS TO BE UNIQUE, and that is a business rule. 
-# TODO: add email as unique identifier
 # adding to that, I will not implement account deletion here as it would not make sense since we do not have permission levels on the DB.
 def insert_user(email, hash_password):
     db = connect_to_db()
-    collection = db['Files']
+    collection = db['Users']
+    
+    collection.create_index([("username", 1)], unique=True) # userEmail HAS TO BE UNIQUE, and that is a business rule.
 
     data = create_user_document(email, hash_password)
 
-    collection.insert_one(data)
+    try:
+        collection.insert_one(data)
+        result = 1
+    except DuplicateKeyError:  # Catch the DuplicateKeyError
+        result = 0
+    except Exception as e:
+        result = -1
+        print(f"LOG-db_operations/insert_user: {e}") # error printed into the console
+        
 
-    result = db.client.close()
+    db.client.close()
 
-    return result # unsure if it will work
+    return result
+
+def delete_user(user_id):
+    return 0
+
+def update_user(user_id, updated_data):
+    return 0
 
 # we access Users collection and return the user document after the query. here we can grab his userId (which is the ObjectID of the file)
 # with the objectId, we are able to filter queries in the Files DB so we can return everything this user has inserted.
@@ -117,7 +133,7 @@ def get_user_by_email(user_email):
     collection = db['Users']
     user = []
 
-    documents = collection.find({"userEmail": user_email}) # should only return one. business rule
+    documents = collection.find_one({"username": user_email}) # should only return one. business rule
     user.append(documents)
 
     db.client.close()
