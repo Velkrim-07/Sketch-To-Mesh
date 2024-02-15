@@ -26,19 +26,24 @@ import bcrypt # unsure
 #FutureReference
 #this will contain the filepath and the image plane name
 #this has not been implemented yet
+# Dataclass to store file path and rotation
 @dataclass
-class FilePathStructure:
-    filePath: str
+class PlaneItem:
+    PlaneFilepath = bpy.props.StringProperty(name="File Path",subtype='FILE_PATH')
+    PlaneRotation = bpy.props.IntProperty(name="Rotation", default=0)
     ImagePlaneName: str
+    
+    def __init__(self, filepath ,rotation):
+        self.PlaneFilepath = filepath
+        self.PlaneRotation = rotation
 
-GlobalFileImageStructArray = [] #this will eventually replace the two array under this
-globalPlaneArray = [] # a list of the names of the planes in Blender
-globalfilePathsArray = [] # a list of the file path we wan to keep track of
+
+
+GlobalPlaneDataArray : list[PlaneItem] = [] #this will eventually replace the two array under this
 UserSignedIn = False
 
 
 
-    
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
@@ -111,9 +116,6 @@ class PlaceImageIn3D(bpy.types.Operator):
     bl_idname = "object.place_image_in_space"
     bl_label ="Place Images"
 
-    PlaneArray = globalPlaneArray
-    filePathsArray = globalfilePathsArray
-
     def execute(self, context):
         #this will keep count of the views were have captured
         Itervalue = 0
@@ -121,31 +123,26 @@ class PlaceImageIn3D(bpy.types.Operator):
         ImageDiretoryForNewImage = "ImageFolder"
         #this will eventually need to move to somewhere more accessable
         #this is only here for now
-        filePathsArray = [bpy.context.scene.front_views_file_path, bpy.context.scene.back_views_file_path,  bpy.context.scene.side_views_file_path ]
     
-        for file_path in filePathsArray : 
-            if file_path :
+        for plane_data in GlobalPlaneDataArray : 
+            if plane_data :
                 #this is used for the new image. We want to save the new image as the same type of file as the first
-                Extension =  file_path[file_path.rfind("."): ] 
-
+                Extension =  plane_data.PlaneFilepath[plane_data.PlaneFilepath.rfind("."): ] 
                 #this is the file name for the image we are creating
-                ImgName = "View" + str(Itervalue)
-                self.PlaneArray.insert(Itervalue, ImgName) # allows us to access the plane after creation
-
+                plane_data.ImagePlaneName = "View" + str(Itervalue)
+                # allows us to access the plane after creation
                 #this is where we want to save the picture so i can be reaccessed
-                outline_image(file_path, Extension, ImgName, ImageDiretoryForNewImage)
-
+                outline_image(plane_data.PlaneFilepath, Extension, plane_data.ImagePlaneName, ImageDiretoryForNewImage)
                 #this creates a new file path to the image we just saved
-                NewFilePath = os.path.abspath(ImageDiretoryForNewImage + "\\" + ImgName + Extension) 
+                NewFilePath = os.path.abspath(ImageDiretoryForNewImage + "\\" + plane_data.ImagePlaneName + Extension) 
                 
                 if NewFilePath:
                     filename = os.path.basename(NewFilePath)
                     FileDirectory = NewFilePath[: NewFilePath.rfind("\\")] + "\\"
-
                     #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
                     #we set the rotation and location of each plane
-                    bpy.data.objects[ImgName].select_set(True)
+                    bpy.data.objects[plane_data.ImagePlaneName].select_set(True)
                     match Itervalue :
                         case 1: bpy.ops.transform.translate(value=(-0.01, 0 , 0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, True, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False, alt_navigation=True)
                         case 2: bpy.context.object.rotation_euler[2] = 0
@@ -163,7 +160,7 @@ class PlaceImageIn3D(bpy.types.Operator):
         return {'FINISHED'}
 
 
-   
+
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
 # first create the operator 
@@ -198,29 +195,76 @@ class StMTestConnectionOperator(bpy.types.Operator):
 class Reset_Input_Images(bpy.types.Operator): 
     bl_idname = "object.reset_selected_images"
     bl_label = "Reset_Images"
-    
-    myFilePathArray = globalfilePathsArray # saves the entries in the global list to be deleted
-    ImagePanelArray = globalPlaneArray
-    globalPlaneArray.clear()
-    globalfilePathsArray.clear() # clears the global list 
 
     def execute(self, context):
         Itervalue = 0
 
-        for filePath in self.myFilePathArray :
+        for plane_data in GlobalPlaneDataArray :
             #Finds the Images Saved
-            ImageFilePath = os.path.abspath("ImageFolder\\" + "View" + str(Itervalue) + filePath[filePath.rfind("."): ] ) 
+            ImageFilePath = os.path.abspath("ImageFolder\\" + "View" + str(Itervalue) + plane_data.PlaneFilepath[plane_data.PlaneFilepath.rfind("."): ] ) 
             # if we find that file we will delete it
-            if ImageFilePath:
-                os.remove(ImageFilePath)
-
-        for images in self.ImagePanelArray:
+            if ImageFilePath: os.remove(ImageFilePath)
             # selects the image plane in the array 
-            bpy.data.objects[images].select_set(True)
+            bpy.data.objects[plane_data.ImagePlaneName].select_set(True)
             #deletes the image plane in the array
             bpy.ops.object.delete(use_global=False, confirm=False)
+            #increases the itervale to reach the next View string
+            Itervalue = Itervalue + 1 
+
+        # clears the PlaneData Array
+        GlobalPlaneDataArray.clear() 
         return {'FINISHED'}
 
+# Operator to add a new plane item
+class OBJECT_OT_add_plane_item(bpy.types.Operator):
+    bl_idname = "object.add_plane_item"
+    bl_label = "Add Plane Item"
+
+    def execute(self, context):
+        #adds the plane Itme to the Plane Item List
+        NewFileRotationPair = PlaneItem(bpy.context.scene.PlaneFilePath, bpy.context.scene.PlaneRotation )
+        GlobalPlaneDataArray.append(NewFileRotationPair)
+        return {'FINISHED'}
+
+    def draw(self, context):    
+        layout = self.layout   
+        row = layout.row()
+        row.prop(context.scene, "PlaneFilePath", text="FilePath : ") 
+        row = layout.row()
+        row.prop(context.scene, "PlaneRotation", text="Rotation : ", slider=True) 
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+
+
+class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):  
+    bl_label = "FilePath List"
+    bl_idname = "_PT_Views_File_Path"
+    bl_parent_id = "_PT_Views" 
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+
+    @classmethod
+    def poll(self,context):
+        return context.object is not None
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+
+        # List current plane items
+        for item in GlobalPlaneDataArray:
+            box = layout.box()
+            col = box.row()
+            filename = os.path.basename(item.PlaneFilepath)
+            col.label(text="Name: " + filename + "Rotation: " + str(item.PlaneRotation))
+
+        row = layout.row()
+        row.operator("object.reset_selected_images", text="Reset Images")
+
+        
+        
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
     bl_idname = "_PT_Views"
@@ -230,21 +274,18 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
+
+        # Button to add a new plane item
         row = layout.row()
-        row.prop(context.scene, "front_views_file_path", text="Front View")
-        row = layout.row()
-        row.prop(context.scene, "back_views_file_path", text="Back View")
-        row = layout.row()
-        row.prop(context.scene, "side_views_file_path", text="Side View")
-        row = layout.row()
-        row.operator("object.reset_selected_images", text="Reset Images")
+        layout.operator("object.add_plane_item")
 
 
 
 class DoImg(bpy.types.Operator):
     bl_idname = "object.do_img"
     bl_label = "Place Image"
-
+    
     #Property that holds the filepath that will be used to insert the image
     myFilePath = ""
     #bpy.props.StringProperty(subtype="FILE_PATH")
@@ -261,8 +302,9 @@ class DoImg(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
+
 class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
-    bl_label = "Align_Location"
+    bl_label = "Align Images"
     bl_idname = "_PT_AlignViews"
     bl_parent_id = "_PT_Views"
     bl_space_type = 'VIEW_3D'
@@ -272,6 +314,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):
         layout = self.layout
         row = layout.row()
         row.operator("object.place_image_in_space", text="Align Image")
+
 
 
 class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):  
@@ -299,29 +342,8 @@ class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("mesh.primitive_cube_add", text="Export Mesh")
 
-
-###this is a example class ###
-class ExampleOperator(bpy.types.Operator):
-    bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
-    bl_label = "Load Image"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    #properities go here
-
-    #this is where you define what you want to happen
-    def execute(self, context):
-      # Do Something
-        return {'FINISHED'}
-    
-    #this is how you would call the operators in other classes
-    #layout.operator("load.ExampleName", text="")
-    #text is what you want displayed
-
-    #there need to be called in the register and unregister definetions respectively close to the bottom of the script
-    #bpy.utils.register_class(LoadImageOperator) 
-    #bpy.utils.unregister_class(LoadImageOperator)
-    ###this is the end of the example class ###
-    
+        
+        
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login_popup"
     bl_label = "Database Register/Login"
@@ -367,10 +389,11 @@ class DataBaseLogin(bpy.types.Operator):
         row = layout.row()
         row.prop(context.scene, "DB_Password", text="Password", slider=True) 
 
-
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
+      
+      
 class StMTestSaveFileToDb(bpy.types.Operator):
     bl_idname = "wm.save_file_to_db_operator"
     bl_label = "Test Saving File"
@@ -424,16 +447,12 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
         row = layout.row()
         row.operator("wm.test_connection_operator", text="Test Connection")
-
         row = layout.row()
         row.operator("wm.database_login_popup", text="Access Database")
-        
         row = layout.row()
         row.operator("wm.prepare_image_operator", text="Test Image Prep")
-        
         row = layout.row()
         row.operator("wm.save_file_to_db_operator", text="Save File to DB")
 
@@ -445,26 +464,49 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
 
 
 
+###this is a example class ###
+class ExampleOperator(bpy.types.Operator):
+    bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
+    bl_label = "Load Image"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #properities go here
+
+    #this is where you define what you want to happen
+    def execute(self, context):
+      # Do Something
+        return {'FINISHED'}
+    
+    #this is how you would call the operators in other classes
+    #layout.operator("load.ExampleName", text="")
+    #text is what you want displayed
+
+    #there need to be called in the register and unregister definetions respectively close to the bottom of the script
+    #bpy.utils.register_class(LoadImageOperator) 
+    #bpy.utils.unregister_class(LoadImageOperator)
+    ###this is the end of the example class ###
+
+
 
 def register():
-    bpy.types.Scene.front_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH", description="Front View")
-    bpy.types.Scene.back_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH", description="Back View")
-    bpy.types.Scene.side_views_file_path = bpy.props.StringProperty(subtype="FILE_PATH", description="Side View")
     bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Poly Count", default=10, min=0, max=100)
     bpy.types.Scene.mesh_rating = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Image Center Y", default=10, min=0, max=100)
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
-    
     #Database Properties
     bpy.types.Scene.DB_Username = bpy.props.StringProperty(name="DBUsername", default="")
     bpy.types.Scene.DB_Password = bpy.props.StringProperty(name="DBPassword", default="")
-
-
+    #Plane data Properites
+    bpy.types.Scene.PlaneFilePath = bpy.props.StringProperty(name="File Path",subtype='FILE_PATH')
+    bpy.types.Scene.PlaneRotation = bpy.props.IntProperty(name="Image Center Y", default=0, min=-180, max=180)
+    #Classes
+    bpy.utils.register_class(OBJECT_OT_add_plane_item)
     bpy.utils.register_class(DataBaseLogin)
     bpy.utils.register_class(Reset_Input_Images)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Views_Panel)
+    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
     bpy.utils.register_class(PlaceImageIn3D)
     bpy.utils.register_class(DoImg)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
@@ -479,28 +521,27 @@ def register():
     bpy.utils.register_class(StMTestGetFileFromDbFromUserId) 
     bpy.utils.register_class(StMTestDeleteFileFromDbFromUserId) 
 
-
 def unregister():
-    del bpy.types.Scene.front_views_file_path
-    del bpy.types.Scene.back_views_file_path
-    del bpy.types.Scene.side_views_file_path
     del bpy.types.Scene.poly_count_range
     del bpy.types.Scene.mesh_rating
     del bpy.types.Scene.Image_Center_X
     del bpy.types.Scene.Image_Center_Y
     del bpy.types.Scene.FileName_Input
-
+    #Classes
+    bpy.utils.unregister_class(OBJECT_OT_add_plane_item)
     bpy.utils.unregister_class(DataBaseLogin)
     bpy.utils.unregister_class(Reset_Input_Images)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_Panel)
+    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
     bpy.utils.unregister_class(PlaceImageIn3D)
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     #bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
-
+    # db test connection and image prep
+    bpy.utils.unregister_class(StMTestImagePrep)
     # Tests
     bpy.utils.unregister_class(StMTestImagePrep)
     bpy.utils.unregister_class(StMTestConnectionOperator)
