@@ -12,11 +12,11 @@ bl_info = {
     # bpy.ops.wm.save_as_mainfile(filepath="c:\Users\James Burns\Documents\TestFile.blend")
     
 import bpy
-import cv2
-import numpy as np
-import os
+import numpy
 
-from dataclasses import dataclass
+from .UI_Operation import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D
+from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId
+
 from .db_operations import test_connection, save_file_to_db, get_files_by_user_id, delete_files_by_object_id # the . is on purpose. do not remove
 from .image_processing import prepare_image, test_feature_detection # the . is on purpose. do not remove
 from .bcrypt_password import hash_password
@@ -27,139 +27,8 @@ import bcrypt # unsure
 #this will contain the filepath and the image plane name
 #this has not been implemented yet
 # Dataclass to store file path and rotation
-@dataclass
-class PlaneItem:
-    PlaneFilepath = bpy.props.StringProperty(name="File Path",subtype='FILE_PATH')
-    PlaneRotation = bpy.props.IntProperty(name="Rotation", default=0)
-    ImagePlaneName: str
-    
-    def __init__(self, filepath ,rotation):
-        self.PlaneFilepath = filepath
-        self.PlaneRotation = rotation
 
-
-
-GlobalPlaneDataArray : list[PlaneItem] = [] #this will eventually replace the two array under this
 UserSignedIn = False
-
-
-
-class StMTestImagePrep(bpy.types.Operator):
-    bl_idname = "wm.prepare_image_operator"
-    bl_label = "Test Image Prep"
-
-    def execute(self, context):
-        test_feature_detection()
-        
-        #success = prepare_image(path)
-        #if success:
-        #    self.report({'INFO'}, "Image Prep Succesful!")
-        #else:
-        #    self.report({'ERROR'}, "Failed to Image Prep.")
-
-
-# wth is this? why is this here and not in a proper file? why does this method even exists? sigh.
-def outline_image(image_path, Extension, ImgName, Filedirectory):
-    """Read an image from a path, outline it, calculate the center of mass for the outlines, and draw a blue dot there."""
-    image = cv2.imread(image_path)
-
-    if image is None:
-        print("Error: Image not found or unable to load.")
-        return
-    
-    # temporary file size. adjusting files to the same scale can be beneficial for feature detectors
-    resized_image = cv2.resize(image, (800, 600))  
-    # grayscale reduces computational load
-    gray_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY) 
-    # noise reduction
-    blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
-    # canny edge detection emphasizes edges in the image
-    # we will most likely be using one of the two as feature detectors: ORB, AKAZE.
-    # both feature detection algorithms have positive results from this as they often rely on edge information to find key points.
-    edges = cv2.Canny(blurred_image, 50, 15, apertureSize=3)
-    #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    #edges = cv2.Canny(gray, 50, 150, apertureSize=3)
-    contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Check if any contours were found
-    if contours:
-        # Draw contours on the original image
-        cv2.drawContours(resized_image, contours, -1, (0, 255, 0), 2)
-        # Calculate the combined center of mass for all contours
-        totalX, totalY, totalArea = 0, 0, 0
-
-        for contour in contours:
-            M = cv2.moments(contour)
-
-            if M["m00"] != 0:
-                totalX += int(M["m10"])
-                totalY += int(M["m01"])
-                totalArea += M["m00"]
-
-        if totalArea != 0:
-            cX = int(totalX / totalArea)
-            cY = int(totalY / totalArea)
-            # Draw a blue dot at the combined center of mass
-            cv2.circle(resized_image, (cX, cY), 5, (255, 0, 0), -1)
-        else:
-            print("Error: Combined center of mass could not be calculated.")
-    else:
-        print("Error: No contours found.")
-
-    os.chdir(Filedirectory) #changes the directory to the folder where we are going to save the file
-    cv2.imwrite(ImgName + Extension, resized_image) #saves the image
-    os.chdir("..\\") #goes back one directory
-
-
-
-class PlaceImageIn3D(bpy.types.Operator):
-    bl_idname = "object.place_image_in_space"
-    bl_label ="Place Images"
-
-    def execute(self, context):
-        #this will keep count of the views were have captured
-        Itervalue = 0
-        #this will be a folder in the sketch-to-Mesh project. This will hold the Image processed
-        ImageDiretoryForNewImage = "ImageFolder"
-        #this will eventually need to move to somewhere more accessable
-        #this is only here for now
-    
-        for plane_data in GlobalPlaneDataArray : 
-            if plane_data :
-                #this is used for the new image. We want to save the new image as the same type of file as the first
-                Extension =  plane_data.PlaneFilepath[plane_data.PlaneFilepath.rfind("."): ] 
-                #this is the file name for the image we are creating
-                plane_data.ImagePlaneName = "View" + str(Itervalue)
-                # allows us to access the plane after creation
-                #this is where we want to save the picture so i can be reaccessed
-                outline_image(plane_data.PlaneFilepath, Extension, plane_data.ImagePlaneName, ImageDiretoryForNewImage)
-                #this creates a new file path to the image we just saved
-                NewFilePath = os.path.abspath(ImageDiretoryForNewImage + "\\" + plane_data.ImagePlaneName + Extension) 
-                
-                if NewFilePath:
-                    filename = os.path.basename(NewFilePath)
-                    FileDirectory = NewFilePath[: NewFilePath.rfind("\\")] + "\\"
-                    #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
-                    bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
-                    #we set the rotation and location of each plane
-                    bpy.data.objects[plane_data.ImagePlaneName].select_set(True)
-                    match Itervalue :
-                        case 1: bpy.ops.transform.translate(value=(-0.01, 0 , 0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, True, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False, alt_navigation=True)
-                        case 2: bpy.context.object.rotation_euler[2] = 0
-                else:
-                    match Itervalue:
-                        case 0: MissingView = "FontView"
-                        case 1: MissingView = "BackView"
-                        case 2: MissingView = "SideView"
-                    self.report({'ERROR'}, "No inputted Image for" + MissingView)
-                Itervalue = Itervalue + 1
-            else:
-                self.report({'ERROR'}, "No inputted Image.")
-                Itervalue = Itervalue + 1
-
-        return {'FINISHED'}
-
-
 
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
@@ -178,92 +47,8 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
     def draw(self, context): 
         layout = self.layout
 
-# class that executes test_connection from db_operations
-# will be deleted in beta versions
-class StMTestConnectionOperator(bpy.types.Operator):
-    bl_idname = "wm.test_connection_operator"
-    bl_label = "Test Database Connection"
-
-    def execute(self, context): 
-        success = test_connection()
-        if success:
-            self.report({'INFO'}, "Connection to MongoDB successful!")
-        else:
-            self.report({'ERROR'}, "Failed to connect to MongoDB.")
-        return {'FINISHED'}
-
-class Reset_Input_Images(bpy.types.Operator): 
-    bl_idname = "object.reset_selected_images"
-    bl_label = "Reset_Images"
-
-    def execute(self, context):
-        Itervalue = 0
-
-        for plane_data in GlobalPlaneDataArray :
-            #Finds the Images Saved
-            ImageFilePath = os.path.abspath("ImageFolder\\" + "View" + str(Itervalue) + plane_data.PlaneFilepath[plane_data.PlaneFilepath.rfind("."): ] ) 
-            # if we find that file we will delete it
-            if ImageFilePath: os.remove(ImageFilePath)
-            # selects the image plane in the array 
-            bpy.data.objects[plane_data.ImagePlaneName].select_set(True)
-            #deletes the image plane in the array
-            bpy.ops.object.delete(use_global=False, confirm=False)
-            #increases the itervale to reach the next View string
-            Itervalue = Itervalue + 1 
-
-        # clears the PlaneData Array
-        GlobalPlaneDataArray.clear() 
-        return {'FINISHED'}
-
-# Operator to add a new plane item
-class OBJECT_OT_add_plane_item(bpy.types.Operator):
-    bl_idname = "object.add_plane_item"
-    bl_label = "Add Plane Item"
-
-    def execute(self, context):
-        #adds the plane Itme to the Plane Item List
-        NewFileRotationPair = PlaneItem(bpy.context.scene.PlaneFilePath, bpy.context.scene.PlaneRotation )
-        GlobalPlaneDataArray.append(NewFileRotationPair)
-        return {'FINISHED'}
-
-    def draw(self, context):    
-        layout = self.layout   
-        row = layout.row()
-        row.prop(context.scene, "PlaneFilePath", text="FilePath : ") 
-        row = layout.row()
-        row.prop(context.scene, "PlaneRotation", text="Rotation : ", slider=True) 
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
 
 
-
-class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):  
-    bl_label = "FilePath List"
-    bl_idname = "_PT_Views_File_Path"
-    bl_parent_id = "_PT_Views" 
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    @classmethod
-    def poll(self,context):
-        return context.object is not None
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-
-        # List current plane items
-        for item in GlobalPlaneDataArray:
-            box = layout.box()
-            col = box.row()
-            filename = os.path.basename(item.PlaneFilepath)
-            col.label(text="Name: " + filename + "Rotation: " + str(item.PlaneRotation))
-
-        row = layout.row()
-        row.operator("object.reset_selected_images", text="Reset Images")
-
-        
         
 class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
     bl_label = "View"
@@ -279,27 +64,6 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):
         # Button to add a new plane item
         row = layout.row()
         layout.operator("object.add_plane_item")
-
-
-
-class DoImg(bpy.types.Operator):
-    bl_idname = "object.do_img"
-    bl_label = "Place Image"
-    
-    #Property that holds the filepath that will be used to insert the image
-    myFilePath = ""
-    #bpy.props.StringProperty(subtype="FILE_PATH")
-
-    #This is the function that inserts the image into blender
-    def execute(self, context):
-        bpy.ops.object.load_reference_image(filepath=self.myFilePath)
-        return {'FINISHED'}
-    #This is a function that opens a file explorer
-    #THIS DOES NOT DO ANYTHING I just think its going to be useful to have later
-    def invoke(self, context, event):
-        # Open a file browser to select a file
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
 
 
 
@@ -392,76 +156,6 @@ class DataBaseLogin(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
-      
-      
-class StMTestSaveFileToDb(bpy.types.Operator):
-    bl_idname = "wm.save_file_to_db_operator"
-    bl_label = "Test Saving File"
-
-    def execute(self, context):
-        
-        save_file_to_db("123") # needs a file path but are not using
-
-        return {'FINISHED'}
-    
-
-class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
-    bl_idname = "wm.get_file_from_db_operator"
-    bl_label = "Test Getting File"
-
-    def execute(self, context):
-        
-        result = get_files_by_user_id("123") # 123 since the only document in the db is 123
-        
-        for document in result:
-            # removed the bin data because it was too annoying as the output. fileEncoded: {document['fileEncoded']}
-            print(f"objectId: {document['_id']}, filename: {document['fileName']}, userId: {document['userId']}, insertedDate: {document['insertedDate']}")
-
-        return {'FINISHED'}
-    
-class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
-    bl_idname = "wm.delete_file_from_db_operator"
-    bl_label = "Test Deleting File"
-
-    def execute(self, context):
-        
-        objectId = "65ccec75d26b1d7703fb3a0a"
-        result = delete_files_by_object_id(objectId) # 123 since the only document in the db is 123
-        
-        if (result == 0):
-            print("No files deleted. Check ObjectID")
-
-        if (result == 1):
-            print(f"objectId: {objectId} file successfully deleted.")
-            self.report({'INFO'}, "File successfully deleted.")
-        
-
-        return {'FINISHED'}
-
-class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):  
-    bl_label = "Testing"
-    bl_idname = "_PT_Testing_Panel"
-    bl_parent_id = "_PT_Sketch_To_Mesh_Main_Panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("wm.test_connection_operator", text="Test Connection")
-        row = layout.row()
-        row.operator("wm.database_login_popup", text="Access Database")
-        row = layout.row()
-        row.operator("wm.prepare_image_operator", text="Test Image Prep")
-        row = layout.row()
-        row.operator("wm.save_file_to_db_operator", text="Save File to DB")
-
-        row = layout.row()
-        row.operator("wm.get_file_from_db_operator", text="Get File from DB")
-
-        row = layout.row()
-        row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
-
 
 
 ###this is a example class ###
@@ -512,7 +206,7 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel) 
     # bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
-    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+    bpy.utils.register_class(testing_operations.VIEW3D_PT_Sketch_To_Mesh_Testing)
     
     # Tests
     bpy.utils.register_class(StMTestImagePrep)  
@@ -528,20 +222,19 @@ def unregister():
     del bpy.types.Scene.Image_Center_Y
     del bpy.types.Scene.FileName_Input
     #Classes
-    bpy.utils.unregister_class(OBJECT_OT_add_plane_item)
+    bpy.utils.unregister_class(UI_Operation.OBJECT_OT_add_plane_item)
     bpy.utils.unregister_class(DataBaseLogin)
-    bpy.utils.unregister_class(Reset_Input_Images)
+    bpy.utils.unregister_class(UI_Operation.Reset_Input_Images)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_Panel)
-    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
-    bpy.utils.unregister_class(PlaceImageIn3D)
-    bpy.utils.unregister_class(DoImg)
+    bpy.utils.unregister_class(UI_Operation.VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
+    bpy.utils.unregister_class(UI_Operation.PlaceImageIn3D)
+    bpy.utils.unregister_class(testing_operations.DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel)
     #bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Align_Views_Location_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
-    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+    bpy.utils.unregister_class(testing_operations.VIEW3D_PT_Sketch_To_Mesh_Testing)
     # db test connection and image prep
-    bpy.utils.unregister_class(StMTestImagePrep)
     # Tests
     bpy.utils.unregister_class(StMTestImagePrep)
     bpy.utils.unregister_class(StMTestConnectionOperator)

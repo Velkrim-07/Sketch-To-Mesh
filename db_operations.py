@@ -140,6 +140,12 @@ def get_user_by_email(user_email):
 
     return user
 
+
+
+
+
+
+
 # run the test when this module is executed
 if __name__ == "__main__":
     test_connection()
