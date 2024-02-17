@@ -2,6 +2,8 @@ import bpy
 import os
 from dataclasses import dataclass
 from .testing_operations import outline_image
+from .bcrypt_password import hash_password
+from .authentication import login_account, register_account
 
 # bpy.ops.wm.save_as_mainfile(filepath="c:\Users\James Burns\Documents\TestFile.blend")
 
@@ -101,3 +103,53 @@ class PlaceImageIn3D(bpy.types.Operator):
                 Itervalue = Itervalue + 1
 
         return {'FINISHED'}
+    
+
+class DataBaseLogin(bpy.types.Operator):
+    bl_idname = "wm.database_login_popup"
+    bl_label = "Database Register/Login"
+
+    DBUserNameInput = ""
+    DBPasswordInput = ""
+
+    def execute(self, context):
+        # this will send the information to the database
+        self.DBUserNameInput = bpy.context.scene.DB_Username
+        self.DBPasswordInput = hash_password(bpy.context.scene.DB_Password.encode('utf-8')) # being sent to encryption as bytes. never stored as string!
+        
+        # now we register/login
+        # we try to login first. if none exist, we register it.
+        register_result = register_account(self.DBUserNameInput, self.DBPasswordInput)
+        
+        # currently like this. once we have a new button it will be easier!
+        # TODO: refactor this.
+        if register_result == -1: # check console error
+            self.report({'INFO'}, "Registration error. Check console for more information.")
+            
+        if register_result == 1: # account/user document created. log in again
+            self.report({'INFO'}, "Registration Successful. Please Log in again to access DB.")
+            
+        if register_result == 0: # account already created. redirect to login
+            byte_password = bpy.context.scene.DB_Password.encode('utf-8') # we need to compare plaintext and the hash! not hash against hash...
+            user, result = login_account(self.DBUserNameInput, byte_password)
+            
+            # will be refactored!
+            if result == 0: # credentials incorrect
+                self.report({'INFO'}, "Credentials Incorrect.")
+            if result == 1:
+                self.report({'INFO'}, "Login Successful.")
+            if result == -1:
+                self.report({'INFO'}, "Unregistered account. Please register")    
+
+        return {'FINISHED'}
+    
+    def draw(self, context):    
+        layout = self.layout   
+        row = layout.row()
+        row.prop(context.scene, "DB_Username", text="Username", slider=True) 
+        row = layout.row()
+        row.prop(context.scene, "DB_Password", text="Password", slider=True) 
+
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
