@@ -93,7 +93,7 @@ class PlaceImageIn3D(bpy.types.Operator):
                         case 2: bpy.context.object.rotation_euler[2] = 0
                 else:
                     match Itervalue:
-                        case 0: MissingView = "FrrontView"
+                        case 0: MissingView = "FrontView"
                         case 1: MissingView = "BackView"
                         case 2: MissingView = "SideView"
                     self.report({'ERROR'}, "No inputted Image for" + MissingView)
