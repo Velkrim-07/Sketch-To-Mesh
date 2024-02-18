@@ -2,6 +2,8 @@ import bpy
 from .db_operations import test_connection, save_file_to_db, get_files_by_user_id, delete_files_by_object_id # the . is on purpose. do not remove
 from .image_processing import prepare_image, test_feature_detection # the . is on purpose. do not remove
 
+# Saving info 
+# bpy.ops.wm.save_as_mainfile(filepath="c:\Users\James Burns\Documents\TestFile.blend")
 class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):  
     bl_label = "Testing"
     bl_idname = "_PT_Testing_Panel"
