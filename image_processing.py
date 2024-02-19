@@ -2,8 +2,6 @@ import cv2
 import numpy as np
 import os
 
-# this will be called once the images are ready
-
 def prepare_image(image_path):
     
     image = cv2.imread(image_path)
@@ -40,7 +38,6 @@ def prepare_image(image_path):
     except Exception as e:
         print(f"Error: {e}")
         return False
-    
 
 def match_features(descriptors1, descriptors2, method='ORB'):
     # using ORB and AKAZE for testing
@@ -53,9 +50,10 @@ def match_features(descriptors1, descriptors2, method='ORB'):
     matches = bf.knnMatch(descriptors1, descriptors2, k=2)
     
     # RATIO TEST
+    # filters out weak matches by comparing the distance of the closes neighbor to that of the second closest neighbor.
     good_matches = []
     for m, n in matches:
-        if m.distance < 0.65 * n.distance:  # Ratio testö
+        if m.distance < 0.75 * n.distance:  # Ratio test
             good_matches.append(m)
     
     return good_matches
@@ -64,7 +62,6 @@ def draw_matches(image1, keypoints1, image2, keypoints2, matches):
 
     matched_image = cv2.drawMatches(image1, keypoints1, image2, keypoints2, matches, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     return matched_image
-
 
 def detect_and_describe_akaze(image_path):
     image = cv2.imread(image_path)
@@ -80,11 +77,11 @@ def detect_and_describe_akaze(image_path):
     
     return keypoints, descriptors
 
-def test():
+def test_feature_detection():
 
-    img_path1 = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/front.png'
-    img_path2 = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/side.png'
-    img_path3 = 'C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/sidee.png' 
+    img_path1 = 'C:/Users/Rafael/Desktop/Exampel/side.png'
+    img_path2 = 'C:/Users/Rafael/Desktop/Exampel/sidee.png'
+    img_path3 = 'C:/Users/Rafael/Desktop/Exampel/front.png' 
 
     # detect
     keypoints1, descriptors1 = detect_and_describe_akaze(img_path1)
