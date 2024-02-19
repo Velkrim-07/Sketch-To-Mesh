@@ -9,6 +9,7 @@ Technologies:
   - bcrypt
   - open CV
   - bpy (Blender Python Library)
+  - pymongo
 
 Features: 
   Sketch-To-Mesh takes in multiple images and then outputs a mesh based on those images.
