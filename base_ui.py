@@ -1,5 +1,4 @@
 import bpy
-
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
 # first create the operator 
@@ -55,6 +54,8 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row = layout.row()
         row.operator("wm.test_connection_operator", text="Test Connection")
         row = layout.row()
+        row.operator("wm.database_login_popup", text="Access Database")
+        row = layout.row()
         row.operator("wm.prepare_image_operator", text="Test Image Prep")
         row = layout.row()
         row.operator("wm.save_file_to_db_operator", text="Save File to DB")
@@ -62,29 +63,4 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row.operator("wm.get_file_from_db_operator", text="Get File from DB")
         row = layout.row()
         row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
-       
-
-
-
-###this is a example class ###
-class ExampleOperator(bpy.types.Operator):
-    bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
-    bl_label = "Load Image"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    #properities go here
-
-    #this is where you define what you want to happen
-    def execute(self, context):
-      # Do Something
-        return {'FINISHED'}
-    
-    #this is how you would call the operators in other classes
-    #layout.operator("load.ExampleName", text="")
-    #text is what you want displayed
-
-    #there need to be called in the register and unregister definetions respectively close to the bottom of the script
-    #bpy.utils.register_class(LoadImageOperator) 
-    #bpy.utils.unregister_class(LoadImageOperator)
-    ###this is the end of the example class ###
 

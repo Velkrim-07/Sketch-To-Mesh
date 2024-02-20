@@ -3,8 +3,8 @@ import numpy as np
 import os
 
 # this will be called once the images are ready
-def prepare_image(image_path, Extension, ImgName, Filedirectory):
-    """Read an image from a path, outline it, calculate the center of mass for the outlines, and draw a blue dot there."""
+def prepare_image(image_path):
+      """Read an image from a path, outline it, calculate the center of mass for the outlines, and draw a blue dot there."""
     image = cv2.imread(image_path)
 
     if image is None:

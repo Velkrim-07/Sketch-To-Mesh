@@ -61,7 +61,6 @@ class StMTestImagePrep(bpy.types.Operator):
         #else:
         #    self.report({'ERROR'}, "Failed to Image Prep.")
 
-
 # class that executes test_connection from db_operations
 # will be deleted in beta versions
 class StMTestConnectionOperator(bpy.types.Operator):
@@ -80,7 +79,6 @@ class StMTestConnectionOperator(bpy.types.Operator):
 class DoImg(bpy.types.Operator):
     bl_idname = "object.do_img"
     bl_label = "Place Image"
-    
     #Property that holds the filepath that will be used to insert the image
     myFilePath = ""
     #bpy.props.StringProperty(subtype="FILE_PATH")
@@ -94,4 +92,4 @@ class DoImg(bpy.types.Operator):
     def invoke(self, context, event):
         # Open a file browser to select a file
         context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+        return {'RUNNING_MODAL'}  
