@@ -8,42 +8,14 @@ import bpy
 # for now all of the button will create a cube
 
 class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):  
+    bl_idname = "_PT_Sketch_To_Mesh_Main_Panel" 
+    bl_label = "Sketch-To-Mesh"  # found at the top of the Panel
     bl_space_type = "VIEW_3D"  
     bl_region_type = "UI"  
-    bl_idname = "_PT_Sketch_To_Mesh_Main_Panel" 
-
     bl_category = "S-T-M"  # Sidebar cName
-    bl_label = "Sketch-To-Mesh"  # found at the top of the Panel
-
+    
     def draw(self, context): 
         layout = self.layout
-  
-class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
-    bl_label = "View"
-    bl_idname = "_PT_Views"
-    bl_parent_id = "_PT_Sketch_To_Mesh_Main_Panel" 
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-
-        # Button to add a new plane item
-        row = layout.row()
-        layout.operator("object.add_plane_item")
-
-class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
-    bl_label = "Align Images"
-    bl_idname = "_PT_AlignViews"
-    bl_parent_id = "_PT_Views"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("object.place_image_in_space", text="Align Image")
 
 class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):  
     bl_label = "MeshSettings"
@@ -71,7 +43,30 @@ class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):
         row.operator("mesh.primitive_cube_add", text="Export Mesh")
 
 
-        ###this is a example class ###
+class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):  
+    bl_label = "Testing"
+    bl_idname = "_PT_Testing_Panel"
+    bl_parent_id = "_PT_Sketch_To_Mesh_Main_Panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        row.operator("wm.test_connection_operator", text="Test Connection")
+        row = layout.row()
+        row.operator("wm.prepare_image_operator", text="Test Image Prep")
+        row = layout.row()
+        row.operator("wm.save_file_to_db_operator", text="Save File to DB")
+        row = layout.row()
+        row.operator("wm.get_file_from_db_operator", text="Get File from DB")
+        row = layout.row()
+        row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
+       
+
+
+
+###this is a example class ###
 class ExampleOperator(bpy.types.Operator):
     bl_idname = "load.ExampleName" #the first word is the type of thing your doing(probally should look this up) follow by '.' and the name you want to use to call the operator
     bl_label = "Load Image"

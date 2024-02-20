@@ -4,29 +4,6 @@ from .image_processing import prepare_image, test_feature_detection # the . is o
 
 # Saving info 
 # bpy.ops.wm.save_as_mainfile(filepath="c:\Users\James Burns\Documents\TestFile.blend")
-class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):  
-    bl_label = "Testing"
-    bl_idname = "_PT_Testing_Panel"
-    bl_parent_id = "_PT_Sketch_To_Mesh_Main_Panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("wm.test_connection_operator", text="Test Connection")
-        row = layout.row()
-        row.operator("wm.database_login_popup", text="Access Database")
-        row = layout.row()
-        row.operator("wm.prepare_image_operator", text="Test Image Prep")
-        row = layout.row()
-        row.operator("wm.save_file_to_db_operator", text="Save File to DB")
-        row = layout.row()
-        row.operator("wm.get_file_from_db_operator", text="Get File from DB")
-        row = layout.row()
-        row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
-
-
 
 class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
     bl_idname = "wm.delete_file_from_db_operator"
@@ -69,7 +46,8 @@ class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
             print(f"objectId: {document['_id']}, filename: {document['fileName']}, userId: {document['userId']}, insertedDate: {document['insertedDate']}")
 
         return {'FINISHED'}
-    
+
+
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
