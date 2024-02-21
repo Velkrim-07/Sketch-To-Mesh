@@ -64,3 +64,17 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row = layout.row()
         row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
 
+class AccessDbCustomPanel(bpy.types.Panel):
+    """Panel to display the custom list and button"""
+    bl_label = "Custom Data Panel"
+    bl_idname = "PT_custom_data"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My Data'
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Button to open the new window and display the list
+        layout.operator("wm.open_custom_window", text="Open Custom Window")
+

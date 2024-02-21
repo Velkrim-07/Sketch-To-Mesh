@@ -21,8 +21,11 @@ class PlaneItem:
 @dataclass
 class UserData:
     UserSignedIn = False
-    
+    user_info = []
+    user_documents = []
     def __init__(self, SignIn):
+        self.user_info = []
+        self.user_documents = [] # testing
         self.UserSignedIn = SignIn
 
 
@@ -163,6 +166,8 @@ class DataBaseLogin(bpy.types.Operator):
            
         byte_password = bpy.context.scene.DB_Password.encode('utf-8') # we need to compare plaintext and the hash! not hash against hash...
         user, result = login_account(self.DBUserNameInput, byte_password)
+
+        User.user_info = user # saving the user id to the user
             
             # will be refactored!
         if result == 0: # credentials incorrect
@@ -246,6 +251,35 @@ class DataBaseUIMenu(bpy.types.Panel):
             row = layout.row()
             row.operator("wm.database_login", text="Login User")
         else :
-            row.operator("mesh.primitive_cube_add", text="Access DataBase") # placeholder Function
+            row.operator("wm.database_access_menu", text="Access Database") # placeholder Function
             row = layout.row()
-            row.operator("mesh.primitive_cube_add", text="Logout")
+            row.operator("mesh.primitive_cube_add", text="Logout") # TODO: logout function in authentication
+
+# scenario: user is logged in and clicked AccessDB button. 
+# functionality: we already have user information saved in the data structure. now we must just get his documents from db
+class UserAccessDb(bpy.types.Operator):
+    bl_idname = "wm.database_access_menu"
+    bl_label = "Access Database"
+
+    def execute(self, context):
+
+        new_window = bpy.ops.wm.window_new()
+        context.window_manager.windows[-1].screen = bpy.data.screens['Scripting']
+
+        # Assuming you have a custom area or a specific area where you want to show the list
+        # For demonstration, we change the area type to TEXT_EDITOR. You should adjust this based on your needs.
+        area = context.window_manager.windows[-1].screen.areas[0]
+        area.type = 'TEXT_EDITOR'
+
+        return {'FINISHED'}
+        
+class AccessDbUIList(bpy.types.UIList):
+    # """Custom UIList for displaying data"""
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        # This method draws each item in the list
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            layout.label(text=item.name, icon='WORLD_DATA')
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon='WORLD_DATA')
