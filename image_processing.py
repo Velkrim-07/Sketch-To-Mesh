@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 
+# this will be called once the images are ready
 def prepare_image(image_path):
     
     image = cv2.imread(image_path)
@@ -29,10 +30,79 @@ def prepare_image(image_path):
     # masked_edges = cv2.bitwise_and(edges, mask)
     
     try:
-        
         # its just going to try to connect and list db collection names
         output_path = os.path.join('C:/Users/RAFAEL MUITO ZIKA/Desktop/Test', 'prepared_image.png')
         cv2.imwrite(output_path, edges)
+        print(f"Image prep done.")
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+
+# wth is this? why is this here and not in a proper file? why does this method even exists? sigh.
+def outline_image(image_path, Extension, ImgName, Filedirectory):
+    """Read an image from a path, outline it, calculate the center of mass for the outlines, and draw a blue dot there."""
+    image = cv2.imread(image_path)
+
+    if image is None:
+        print("Error: Image not found or unable to load.")
+        return
+    
+   # temporary file size. adjusting files to the same scale can be beneficial for feature detectors
+    resized_image = cv2.resize(image, (800, 600))  
+    
+    # grayscale reduces computational load
+    gray_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY) 
+
+    # noise reduction
+    blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
+
+    # canny edge detection emphasizes edges in the image
+    # we will most likely be using one of the two as feature detectors: ORB, AKAZE.
+    # both feature detection algorithms have positive results from this as they often rely on edge information to find key points.
+    edges = cv2.Canny(blurred_image, 50, 150)
+
+    # defines region of interest inside of the image.
+    # this will most likely not be necessary.
+    
+    # mask = np.zeros_like(edges)
+    # roi_vertices = np.array([[(50, 600), (750, 600), (400, 100)]], dtype=np.int32)
+    # cv2.fillPoly(mask, roi_vertices, 255)
+    # masked_edges = cv2.bitwise_and(edges, mask)
+    
+    #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+    contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Check if any contours were found
+    if contours:
+        # Draw contours on the original image
+        cv2.drawContours(resized_image, contours, -1, (0, 255, 0), 2)
+        # Calculate the combined center of mass for all contours
+        totalX, totalY, totalArea = 0, 0, 0
+
+        for contour in contours:
+            M = cv2.moments(contour)
+
+            if M["m00"] != 0:
+                totalX += int(M["m10"])
+                totalY += int(M["m01"])
+                totalArea += M["m00"]
+
+        if totalArea != 0:
+            cX = int(totalX / totalArea)
+            cY = int(totalY / totalArea)
+            # Draw a blue dot at the combined center of mass
+            cv2.circle(resized_image, (cX, cY), 5, (255, 0, 0), -1)
+        else:
+            print("Error: Combined center of mass could not be calculated.")
+    else:
+        print("Error: No contours found.")
+
+    try:
+        os.chdir(Filedirectory) #changes the directory to the folder where we are going to save the file
+        cv2.imwrite(ImgName + Extension, resized_image) #saves the image
+        os.chdir("..\\") #goes back one directory   
         print(f"Image prep done.")
         return True
     except Exception as e:
@@ -59,7 +129,6 @@ def match_features(descriptors1, descriptors2, method='ORB'):
     return good_matches
 
 def draw_matches(image1, keypoints1, image2, keypoints2, matches):
-
     matched_image = cv2.drawMatches(image1, keypoints1, image2, keypoints2, matches, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     return matched_image
 
@@ -78,7 +147,6 @@ def detect_and_describe_akaze(image_path):
     return keypoints, descriptors
 
 def test_feature_detection():
-
     img_path1 = 'C:/Users/Rafael/Desktop/Exampel/side.png'
     img_path2 = 'C:/Users/Rafael/Desktop/Exampel/sidee.png'
     img_path3 = 'C:/Users/Rafael/Desktop/Exampel/front.png' 
