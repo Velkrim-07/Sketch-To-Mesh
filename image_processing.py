@@ -178,6 +178,8 @@ def test_feature_detection():
     cv2.waitKey(0)  
     cv2.destroyAllWindows()  
 
+
+
 # example usage
 #image_path = 'C:/Users/RAFAEL MUITO ZIKA/Pictures/emoji disdcord/pekora fate.png'
 #prepared_image = prepare_image(image_path)
