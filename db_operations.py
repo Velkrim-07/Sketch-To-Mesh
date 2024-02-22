@@ -36,14 +36,14 @@ def test_connection():
 
 # TODO: db, collection and file path temporarily hardcoded
 # TODO: add a userID parameter so it can be created a document attached to an user.
-def save_file_to_db(file_path_db):
+def save_file_to_db(userId):
 
     db =  connect_to_db()
     collection = db['Files'] # temporary collection
 
     # ideally this is going to be file_path_db; the file we want to convert to binary and save in the database. since this is not currently connected to the workflow of the
     # plugin, we left hardcoded to be able to perform a demonstration.
-    blend_file_path = r"/Users/rafaelfernandesdasilva/Desktop/Capstone-Month1/cube.jpeg" 
+    blend_file_path = "C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/prepared_image.png"
     blend_file_name = blend_file_path.split("\\")[-1] # just grabs the end of the file path so we can properly describe it in the DB
     blend_file_name = blend_file_path.split("/")[-1] # for mac?
 
@@ -51,7 +51,7 @@ def save_file_to_db(file_path_db):
 
     # the format of data will likely change after login and registration implemented
     # userId, file_name and file_bin_data. userId currently placeholder
-    data = create_file_document("123", blend_file_name, file_encoded.getvalue())
+    data = create_file_document(userId, blend_file_name, file_encoded.getvalue())
 
     collection.insert_one(data)
 

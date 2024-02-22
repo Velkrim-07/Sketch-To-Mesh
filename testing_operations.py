@@ -28,7 +28,7 @@ class StMTestSaveFileToDb(bpy.types.Operator):
         bl_label = "Test Saving File"
 
         def execute(self, context):
-            save_file_to_db("123") # needs a file path but are not using
+            save_file_to_db("65d60f0e839540defc6a0327") # needs a file path but are not using
 
             return {'FINISHED'}
     
