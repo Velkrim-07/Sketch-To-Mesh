@@ -33,13 +33,12 @@ def decode_file(file_path, file_extension):
 
 # TODO: move to blend-operations
 # TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
+
 def blend_opener(file_path):
     # open up the blend file here
     bpy.ops.wm.open_mainfile(filepath=file_path)
     return 0
 
-# TODO: move to blend-operations
-# TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
 def fbx_opener(file_path):
     # open up the .fbx file here
     bpy.ops.import_scene.fbx(filepath=file_path)
