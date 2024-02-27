@@ -292,7 +292,7 @@ class UserAccessDb(bpy.types.Operator):
             return {'CANCELLED'}
         return {'FINISHED'}
         
-        
+# TODO: remove from ui-operations to image_processing
 def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
     KeyPoints: list = []
     Descriptors: list = []
@@ -343,7 +343,7 @@ def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
                 print(f"Error: {e}")
                 return False
 
-              
+# TODO: move to blend-operations
 def PlaceImage(self):
      #this will keep count of the views were have captured
         Itervalue = 0
