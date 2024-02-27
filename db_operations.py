@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId # unsure if needed
+import os
 
 from .file_conversion import encode_file, decode_file
 from .db_entities import create_file_document, create_user_document
@@ -43,9 +44,8 @@ def save_file_to_db(file_path_db):
 
     # ideally this is going to be file_path_db; the file we want to convert to binary and save in the database. since this is not currently connected to the workflow of the
     # plugin, we left hardcoded to be able to perform a demonstration.
-    blend_file_path = r"/Users/rafaelfernandesdasilva/Desktop/Capstone-Month1/cube.jpeg" 
-    blend_file_name = blend_file_path.split("\\")[-1] # just grabs the end of the file path so we can properly describe it in the DB
-    blend_file_name = blend_file_path.split("/")[-1] # for mac?
+    blend_file_path = file_path_db
+    blend_file_name = os.path.basename(blend_file_name)
 
     file_encoded = encode_file(blend_file_path)
 
