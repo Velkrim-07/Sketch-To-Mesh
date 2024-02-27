@@ -1,10 +1,17 @@
 import bpy
 import io
 import os
-import base64
 import tempfile
 
 def encode_file(file_path):
+    
+   with open(file_path, "rb") as file:
+        blend_file_contents = io.BytesIO(file.read())
+        return blend_file_contents
+   
+def decode_file(file_path, file_extension):
+    #Apparently the data doesn't need to be decoded so we will handle the different
+    #file extensions handled here instead of outside the file_conversion.py file
     blend_file_contents = io.BytesIO(file.read())
     return blend_file_contents
 
@@ -16,11 +23,19 @@ def decode_file(file_path, file_extension):
     #file extensions handled here instead of outside the file_conversion.py file
 
     #write the data into a temporary file
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) #we'll probably have to add another parameter here for the file extension or soemthing else)
+    temp_file.write(file_path)
     temp_file = tempfile.NamedTemporaryFile(delete=False) #well probably have to add another parameter here for the file extension or soemthing else)
     temp_file.write(binary_data)
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) #we'll probably have to add another parameter here for the file extension or soemthing else)
     temp_file.write(file_path)
     temp_file.close()
+
+    #Deal with the separate file extensions
+    if file_extension == ".blend":
+        blend_opener(temp_file.name)
+    else:
+        fbx_opener(temp_file.name)
 
     #Deal with the separate file extensions
     if file_extension == ".blend":
