@@ -10,7 +10,7 @@ bl_info = {
     
 import bpy
 
-from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu, AccessDbUIList, UserAccessDb, MYDOCUMENTS_PT_panel, DocumentItem, DataBaseLogout
+from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu, UserAccessDb, DocumentItem, DataBaseLogout
 from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId
 from .base_ui import VIEW3D_PT_Sketch_To_Mesh_Panel, VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel, VIEW3D_PT_Sketch_To_Mesh_Testing, AccessDbCustomPanel
 
@@ -36,10 +36,9 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
+    # db
     bpy.utils.register_class(UserAccessDb)
-    bpy.utils.register_class(AccessDbUIList)
     bpy.utils.register_class(AccessDbCustomPanel) 
-    bpy.utils.register_class(MYDOCUMENTS_PT_panel) 
     bpy.utils.register_class(DataBaseLogout) 
     
     bpy.utils.register_class(DocumentItem)
@@ -79,12 +78,10 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
 
+    # db
     bpy.utils.unregister_class(UserAccessDb)
-    bpy.utils.unregister_class(AccessDbUIList)
     bpy.utils.unregister_class(AccessDbCustomPanel)
-    bpy.utils.unregister_class(MYDOCUMENTS_PT_panel)
     bpy.utils.unregister_class(DataBaseLogout)
-    
     bpy.utils.unregister_class(DocumentItem)
     del bpy.types.Scene.my_document_collection
     del bpy.types.Scene.my_document_index

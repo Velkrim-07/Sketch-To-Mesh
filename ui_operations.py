@@ -326,28 +326,3 @@ class UserAccessDb(bpy.types.Operator):
             return {'CANCELLED'}
         return {'FINISHED'}
         
-# the panel so we can call the UI list        
-class MYDOCUMENTS_PT_panel(bpy.types.Panel):
-    bl_label = "My Documents"
-    bl_idname = "MYDOCUMENTS_PT_panel"
-    bl_space_type = 'TEXT_EDITOR'
-    bl_region_type = 'UI'
-    bl_category = "Documents"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.template_list("AccessDbUIList", "The_List", context.scene, "my_document_collection", context.scene, "my_document_index")
-        
-# UI list so we can click on rows
-class AccessDbUIList(bpy.types.UIList):
-    
-    data = User.user_documents
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        # draws each item in the list
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.label(text=item.name, icon='WORLD_DATA')
-        elif self.layout_type in {'GRID'}:
-            layout.alignment = 'CENTER'
-            
-            layout.label(text="", icon='WORLD_DATA')
