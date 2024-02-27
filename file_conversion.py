@@ -8,7 +8,8 @@ def encode_file(file_path):
    with open(file_path, "rb") as file:
         blend_file_contents = io.BytesIO(file.read())
         return blend_file_contents
-   
+
+# TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
 def decode_file(file_path, file_extension):
     #Apparently the data doesn't need to be decoded so we will handle the different
     #file extensions handled here instead of outside the file_conversion.py file
@@ -30,11 +31,15 @@ def decode_file(file_path, file_extension):
     #if we are returning just the file back then cases checking will have to happen outside of this method
     return 0
 
+# TODO: move to blend-operations
+# TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
 def blend_opener(file_path):
     # open up the blend file here
     bpy.ops.wm.open_mainfile(filepath=file_path)
     return 0
 
+# TODO: move to blend-operations
+# TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
 def fbx_opener(file_path):
     # open up the .fbx file here
     bpy.ops.import_scene.fbx(filepath=file_path)
