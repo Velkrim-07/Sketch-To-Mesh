@@ -81,6 +81,23 @@ class StMTestConnectionOperator(bpy.types.Operator):
             self.report({'ERROR'}, "Failed to connect to MongoDB.")
         return {'FINISHED'}
 
+# TODO: finish the testing button
+# TODO: import class into __init__
+# TODO: register and unregister and put it together to testing buttons already registered (see examples)
+class StMTestDecodeAndImport(bpy.types.Operator):
+    bl_idname = "wm.test_decode_import"
+    bl_label = "Test Decode And Import"
+
+
+    def execute(self, context): 
+
+        # whatever james is doing here
+        success = test_connection()
+        if success:
+            self.report({'INFO'}, "Connection to MongoDB successful!")
+        else:
+            self.report({'ERROR'}, "Failed to connect to MongoDB.")
+        return {'FINISHED'}
 
 class DoImg(bpy.types.Operator):
     bl_idname = "object.do_img"
