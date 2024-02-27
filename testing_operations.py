@@ -28,7 +28,13 @@ class StMTestSaveFileToDb(bpy.types.Operator):
         bl_label = "Test Saving File"
 
         def execute(self, context):
-            save_file_to_db("65d60f0e839540defc6a0327") # needs a file path but are not using
+            
+            # using hardcoded files to test saving it into db.
+            blend_file_path = "C:/Users/RAFAEL MUITO ZIKA/Desktop/Test/prepared_image.png"
+            blend_file_name = blend_file_path.split("\\")[-1] # just grabs the end of the file path so we can properly describe it in the DB
+            blend_file_name = blend_file_path.split("/")[-1] # for mac?
+
+            save_file_to_db("65d60f0e839540defc6a0327", blend_file_path, blend_file_name) # needs a file path but are not using
 
             return {'FINISHED'}
     
