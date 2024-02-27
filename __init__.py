@@ -10,9 +10,9 @@ bl_info = {
     
 import bpy
 
-from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu
+from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu, UserAccessDb, DocumentItem, DataBaseLogout
 from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId
-from .base_ui import VIEW3D_PT_Sketch_To_Mesh_Panel, VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel, VIEW3D_PT_Sketch_To_Mesh_Testing
+from .base_ui import VIEW3D_PT_Sketch_To_Mesh_Panel, VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel, VIEW3D_PT_Sketch_To_Mesh_Testing, AccessDbCustomPanel
 
 def register():
     bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Poly Count", default=10, min=0, max=100)
@@ -35,6 +35,16 @@ def register():
     bpy.utils.register_class(DoImg)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+
+    # db
+    bpy.utils.register_class(UserAccessDb)
+    bpy.utils.register_class(AccessDbCustomPanel) 
+    bpy.utils.register_class(DataBaseLogout) 
+    
+    bpy.utils.register_class(DocumentItem)
+    bpy.types.Scene.my_document_collection = bpy.props.CollectionProperty(type=DocumentItem)
+    bpy.types.Scene.my_document_index = bpy.props.IntProperty()
+    
     # Tests
     bpy.utils.register_class(DataBaseUIMenu)
     bpy.utils.register_class(DataBaseRegister)
@@ -67,6 +77,15 @@ def unregister():
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+
+    # db
+    bpy.utils.unregister_class(UserAccessDb)
+    bpy.utils.unregister_class(AccessDbCustomPanel)
+    bpy.utils.unregister_class(DataBaseLogout)
+    bpy.utils.unregister_class(DocumentItem)
+    del bpy.types.Scene.my_document_collection
+    del bpy.types.Scene.my_document_index
+
     # db test connection and image prep
     # Tests
     bpy.utils.unregister_class(DataBaseUIMenu)
