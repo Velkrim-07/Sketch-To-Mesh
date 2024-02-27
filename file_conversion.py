@@ -1,4 +1,7 @@
 import io
+import os
+import base64
+import tempfile
 
 def encode_file(file_path):
     
@@ -7,4 +10,16 @@ def encode_file(file_path):
         return blend_file_contents
    
 def decode_file(file_path):
+    #decode the data from base64
+    binary_data = base64.b64decode(file_path)
+
+    #write the data into a temporary file
+    temp_file = tempfile.NamedTemporaryFile(delete=False) #well probably have to add another parameter here for the file extension or soemthing else)
+    temp_file.write(binary_data)
+    temp_file.close()
+
+    #remove the temp file
+    os.unlink(temp_file.name)
+
+    #if we are returning just the file back then cases checking will have to happen outside of this method
     return 0
