@@ -1,5 +1,4 @@
 import bpy
-   
 # this contains the main layout for the Sketch to mesh program
 # to link up functions with the buttons
 # first create the operator 
@@ -8,48 +7,14 @@ import bpy
 # for now all of the button will create a cube
 
 class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):  
+    bl_idname = "_PT_Sketch_To_Mesh_Main_Panel" 
+    bl_label = "Sketch-To-Mesh"  # found at the top of the Panel
     bl_space_type = "VIEW_3D"  
     bl_region_type = "UI"  
-    bl_idname = "_PT_Sketch_To_Mesh_Main_Panel" 
-
     bl_category = "S-T-M"  # Sidebar cName
-    bl_label = "Sketch-To-Mesh"  # found at the top of the Panel
-
+    
     def draw(self, context): 
         layout = self.layout
-
-        
-class VIEW3D_PT_Sketch_To_Mesh_Views_Panel(bpy.types.Panel):  
-    bl_label = "View"
-    bl_idname = "_PT_Views"
-    bl_parent_id = "_PT_Sketch_To_Mesh_Main_Panel" 
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.prop(context.scene, "front_views_file_path", text="Front View")
-        row = layout.row()
-        row.prop(context.scene, "back_views_file_path", text="Back View")
-        row = layout.row()
-        row.prop(context.scene, "side_views_file_path", text="Side View")
-        row = layout.row()
-        row.operator("object.reset_selected_images", text="Reset Images")
-
-
-class VIEW3D_PT_Sketch_To_Mesh_Align_Views_Panel(bpy.types.Panel):  
-    bl_label = "Align_Location"
-    bl_idname = "_PT_AlignViews"
-    bl_parent_id = "_PT_Views"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.operator("object.place_image_in_space", text="Align Image")
-
 
 class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):  
     bl_label = "MeshSettings"
@@ -98,3 +63,18 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row.operator("wm.get_file_from_db_operator", text="Get File from DB")
         row = layout.row()
         row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
+
+class AccessDbCustomPanel(bpy.types.Panel):
+    """Panel to display the custom list and button"""
+    bl_label = "Custom Data Panel"
+    bl_idname = "PT_custom_data"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My Data'
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Button to open the new window and display the list
+        layout.operator("wm.open_custom_window", text="Open Custom Window")
+
