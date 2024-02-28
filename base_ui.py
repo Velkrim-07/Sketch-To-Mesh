@@ -16,6 +16,9 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
     def draw(self, context): 
         layout = self.layout
 
+# this will need rework.
+# TODO: figure out what of this is still usable later on
+# - SaveMesh button will certainly be used later. It is currently doing nothing
 class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):  
     bl_label = "MeshSettings"
     bl_idname = "_PT_MeshSettings"

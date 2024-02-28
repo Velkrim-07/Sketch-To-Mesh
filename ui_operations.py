@@ -33,12 +33,14 @@ class UserData:
 
 
 User: UserData = UserData(False)
-GlobalPlaneDataArray : list[PlaneItem] = [] #this will eventually replace the two array under this
+GlobalPlaneDataArray : list[PlaneItem] = [] # this will eventually replace the two array under this
   
 # Operator to add a new plane item
+# adds new image to be analyzed
 class OBJECT_OT_add_plane_item(bpy.types.Operator):
     bl_idname = "object.add_plane_item"
     bl_label = "Add Plane Item"
+    bl_description = "Select and add new images to be processed"
 
     def execute(self, context):
         #adds the plane Itme to the Plane Item List
@@ -88,7 +90,8 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):
 
 class PlaceImageIn3D(bpy.types.Operator):
     bl_idname = "object.place_image_in_space"
-    bl_label ="Place Images"
+    bl_label = "Place Images"
+    bl_description = "Sends images to feature detection" # rework possibly?
 
     def execute(self, context):
         Feature_detection(self=self, PlaneDataArray=GlobalPlaneDataArray)
@@ -98,6 +101,7 @@ class PlaceImageIn3D(bpy.types.Operator):
 class Reset_Input_Images(bpy.types.Operator): 
     bl_idname = "object.reset_selected_images"
     bl_label = "Reset_Images"
+    bl_description = "Reset previously selected images"
 
     def execute(self, context):
         Itervalue = 0
@@ -122,6 +126,7 @@ class Reset_Input_Images(bpy.types.Operator):
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login"
     bl_label = "Database Login"
+    bl_description = "Login into the Database in order to access user stored data"
 
     DBUserNameInput = ""
     DBPasswordInput = ""
@@ -161,6 +166,7 @@ class DataBaseLogin(bpy.types.Operator):
 class DataBaseLogout(bpy.types.Operator):
     bl_idname = "wm.user_logout"
     bl_label = "Logout"
+    bl_description = "Logout from the Database"
     
     def execute(self, context):
     
@@ -179,6 +185,7 @@ class DataBaseLogout(bpy.types.Operator):
 class DataBaseRegister(bpy.types.Operator):
     bl_idname = "wm.database_register"
     bl_label = "Database Register"
+    bl_description = "Register new account to utilize Database services"
 
     DBUserNameInput = ""
     DBPasswordInput = ""
@@ -248,6 +255,7 @@ class DocumentItem(bpy.types.PropertyGroup):
 class UserAccessDb(bpy.types.Operator):
     bl_idname = "wm.database_access_menu"
     bl_label = "Access Database"
+    bl_description = "Retrieve or upload documents into the Database"
 
     def execute(self, context):
         
