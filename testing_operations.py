@@ -8,6 +8,7 @@ from .image_processing import prepare_image, test_feature_detection # the . is o
 class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
     bl_idname = "wm.delete_file_from_db_operator"
     bl_label = "Test Deleting File"
+    bl_description = "Tests File Deletion"
 
     def execute(self, context):
         
@@ -26,6 +27,7 @@ class StMTestDeleteFileFromDbFromUserId(bpy.types.Operator):
 class StMTestSaveFileToDb(bpy.types.Operator):
         bl_idname = "wm.save_file_to_db_operator"
         bl_label = "Test Saving File"
+        bl_description = "Test saving new file as a new document in Database"
 
         def execute(self, context):
             
@@ -42,6 +44,7 @@ class StMTestSaveFileToDb(bpy.types.Operator):
 class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
     bl_idname = "wm.get_file_from_db_operator"
     bl_label = "Test Getting File"
+    bl_description = "Test GET Database function"
 
     def execute(self, context):
         
@@ -57,6 +60,7 @@ class StMTestGetFileFromDbFromUserId(bpy.types.Operator):
 class StMTestImagePrep(bpy.types.Operator):
     bl_idname = "wm.prepare_image_operator"
     bl_label = "Test Image Prep"
+    bl_description = "Test Feature Detection functionality"
 
     def execute(self, context):
         test_feature_detection()
@@ -72,6 +76,7 @@ class StMTestImagePrep(bpy.types.Operator):
 class StMTestConnectionOperator(bpy.types.Operator):
     bl_idname = "wm.test_connection_operator"
     bl_label = "Test Database Connection"
+    bl_description = "Ping Database and retrieve list of collections"
 
     def execute(self, context): 
         success = test_connection()
@@ -87,7 +92,7 @@ class StMTestConnectionOperator(bpy.types.Operator):
 class StMTestDecodeAndImport(bpy.types.Operator):
     bl_idname = "wm.test_decode_import"
     bl_label = "Test Decode And Import"
-
+    bl_description = "Decodes file from Database and imports into the Blender scene"
 
     def execute(self, context): 
 
@@ -107,6 +112,7 @@ class DoImg(bpy.types.Operator):
     #bpy.props.StringProperty(subtype="FILE_PATH")
 
     #This is the function that inserts the image into blender
+    
     def execute(self, context):
         bpy.ops.object.load_reference_image(filepath=self.myFilePath)
         return {'FINISHED'}
