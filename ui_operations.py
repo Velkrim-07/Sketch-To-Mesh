@@ -288,3 +288,11 @@ class UserAccessDb(bpy.types.Operator):
             return {'CANCELLED'}
         return {'FINISHED'}
         
+
+class TestPlaceMesh(bpy.types.Operator):
+    bl_idname = "wm.place_mesh"
+    bl_label ="Place Mesh"
+
+    def execute(self, context):
+        DrawAllMeshesToScreen((0, 255, 0), 5, self, GlobalPlaneDataArray)
+        return {'FINISHED'}

@@ -97,7 +97,6 @@ class StMTestDecodeAndImport(bpy.types.Operator):
     bl_description = "Decodes file from Database and imports into the Blender scene"
 
     def execute(self, context): 
-
         # whatever james is doing here
         success = test_connection()
         if success:
