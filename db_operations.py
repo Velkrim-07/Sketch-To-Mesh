@@ -36,6 +36,7 @@ def test_connection():
 
 # saves files to db.
 # encodes file in specified file_path parameter, creates a json with the data and inserts into Files collection in the Db
+# TODO: check database for duplicates 
 def save_file_to_db(userId, file_path, file_name):
 
     db =  connect_to_db()
