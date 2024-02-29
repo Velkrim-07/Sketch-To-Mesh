@@ -35,9 +35,9 @@ def test_connection():
         
         db.client.close()
 
-# TODO: db, collection and file path temporarily hardcoded
-# TODO: add a userID parameter so it can be created a document attached to an user.
-def save_file_to_db(file_path_db):
+# saves files to db.
+# encodes file in specified file_path parameter, creates a json with the data and inserts into Files collection in the Db
+def save_file_to_db(userId, file_path, file_name):
 
     db =  connect_to_db()
     collection = db['Files'] # temporary collection

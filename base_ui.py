@@ -16,6 +16,9 @@ class VIEW3D_PT_Sketch_To_Mesh_Panel(bpy.types.Panel):
     def draw(self, context): 
         layout = self.layout
 
+# this will need rework.
+# TODO: figure out what of this is still usable later on
+# - SaveMesh button will certainly be used later. It is currently doing nothing
 class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):  
     bl_label = "MeshSettings"
     bl_idname = "_PT_MeshSettings"
@@ -66,4 +69,18 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row = layout.row()
         row.operator("wm.place_mesh", text="Place Mesh")
         
+
+class AccessDbCustomPanel(bpy.types.Panel):
+    """Panel to display the custom list and button"""
+    bl_label = "Custom Data Panel"
+    bl_idname = "PT_custom_data"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'My Data'
+
+    def draw(self, context):
+        layout = self.layout
+
+        # Button to open the new window and display the list
+        layout.operator("wm.open_custom_window", text="Open Custom Window")
 
