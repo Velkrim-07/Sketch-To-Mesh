@@ -2,6 +2,8 @@ import bpy
 import os
 import cv2
 import os.path
+import blf
+import bpy.types
 from os import path
 from dataclasses import dataclass
 from .image_processing import prepare_image, detect_and_describe_akaze, outline_image, match_features, draw_matches
@@ -34,6 +36,31 @@ class UserData:
 
 User: UserData = UserData(False)
 GlobalPlaneDataArray : list[PlaneItem] = [] # this will eventually replace the two array under this
+
+def draw_callback_px(self, context, message):
+    font_id = 0
+    blf.position(font_id, 15, 30, 0)
+    blf.size(font_id, 20)
+    blf.draw(font_id, message)
+    
+class NotificationPopup(bpy.types.Operator):
+    bl_idname = "wm.toast_notification"
+    bl_label = "Show Toast Notification"
+    
+    message: bpy.props.StringProperty(name="Message",description="The message to display in the toast",default="Toast Notification!" )
+
+    def execute(self, context):
+        args = (self, context, self.message)
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+        self.report({'INFO'}, "OK Pressed")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):    
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+
+        self.layout.label(text=self.message)
   
 # Operator to add a new plane item
 # adds new image to be analyzed
@@ -145,6 +172,9 @@ class DataBaseLogin(bpy.types.Operator):
         if result == 0: # credentials incorrect
             self.report({'INFO'}, "Credentials Incorrect.")
         if result == 1:
+            
+            bpy.ops.wm.toast_notification('INVOKE_DEFAULT', message="Login Successful")
+            
             self.report({'INFO'}, "Login Successful.")
             User.UserSignedIn = True
         if result == -1:
