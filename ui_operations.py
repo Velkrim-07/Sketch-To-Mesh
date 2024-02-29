@@ -1,57 +1,95 @@
+from typing import Set
 import bpy
 import os
+from bpy.types import Context
 import cv2
 import os.path
 from os import path
 from dataclasses import dataclass
-from .image_processing import prepare_image, detect_and_describe_akaze, outline_image, match_features, draw_matches
-from .bcrypt_password import hash_password
-from .authentication import login_account, register_account
-
-
+from bpy.props import StringProperty, IntProperty, CollectionProperty
+from bpy.types import Operator, Panel
+#from image_processing import prepare_image, detect_and_describe_akaze, outline_image, match_features, draw_matches
+#from bcrypt_password import hash_password
+#from authentication import login_account, register_account
 @dataclass
 class PlaneItem:
-    PlaneFilepath = bpy.props.StringProperty(name="File Path",subtype='FILE_PATH')
-    PlaneRotation = bpy.props.IntProperty(name="Rotation", default=0)
-    ImagePlaneName: str
-    ImagePlaneFilePath: str
-    
-    def __init__(self, filepath ,rotation):
-        self.PlaneFilepath = filepath
-        self.PlaneRotation = rotation
+    PlaneFilepath: str
+    PlaneRotation: int
+    ImagePlaneName: str = ""
+    ImagePlaneFilePath: str = ""
+    selected_for_removal: bool = False
 
-@dataclass
+    def __init__(self, **kwargs):
+        self.PlaneFilepath = kwargs.get('filepath', '')
+        self.PlaneRotation = kwargs.get('rotation', 0)
+
+
 class UserData:
-    UserSignedIn = False
-    
     def __init__(self, SignIn):
         self.UserSignedIn = SignIn
 
+User = UserData(False)
+GlobalPlaneDataArray = []
 
-User: UserData = UserData(False)
-GlobalPlaneDataArray : list[PlaneItem] = [] #this will eventually replace the two array under this
-  
-# Operator to add a new plane item
-class OBJECT_OT_add_plane_item(bpy.types.Operator):
+class OBJECT_OT_add_plane_item(Operator):
     bl_idname = "object.add_plane_item"
     bl_label = "Add Plane Item"
+    filepath: StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        #adds the plane Itme to the Plane Item List
-        NewFileRotationPair = PlaneItem(bpy.context.scene.PlaneFilePath, bpy.context.scene.PlaneRotation )
-        GlobalPlaneDataArray.append(NewFileRotationPair)
+        global GlobalPlaneDataArray
+        plane_item = PlaneItem(filepath=self.filepath, rotation=0)  # Assuming default rotation is 0
+        GlobalPlaneDataArray.append(plane_item)
         return {'FINISHED'}
 
-    def draw(self, context):    
-        layout = self.layout   
-        row = layout.row()
-        row.prop(context.scene, "PlaneFilePath", text="FilePath ") 
-        row = layout.row()
-        row.prop(context.scene, "PlaneRotation", text="Rotation ", slider=True) 
-
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
+class OBJECT_OT_remove_plane_item(Operator):
+    bl_idname = "object.remove_plane_item"
+    bl_label = "Remove Plane Item"
+    index: IntProperty()
+   
+    def execute(self, context):
+        scene = context.scene
+        if 'custom_plane_items' in scene:
+            del scene['custom_plane_items'][self.index]
+        return {'FINISHED'}
+
+
+class VIEW3D_PT_CustomPanel(Panel):
+    bl_label = "Image Management"
+    bl_idname = "VIEW3D_PT_CUSTOM_image_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Tool'
+    
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        plane_items = scene.get('custom_plane_items', [])
+        
+        for index, filepath in enumerate(plane_items):
+            box = layout.box()
+            row = box.row()
+            row.label(text=filepath)
+            row.operator("object.remove_plane_item", text="Remove", icon='REMOVE').index = index
+        
+        layout.operator("object.add_plane_item", text="Add Image")
+
+def register():
+    bpy.utils.register_class(OBJECT_OT_add_plane_item)
+    bpy.utils.register_class(OBJECT_OT_remove_plane_item)
+    bpy.utils.register_class(VIEW3D_PT_CustomPanel)
+
+def unregister():
+    bpy.utils.unregister_class(OBJECT_OT_add_plane_item)
+    bpy.utils.unregister_class(OBJECT_OT_remove_plane_item)
+    bpy.utils.unregister_class(VIEW3D_PT_CustomPanel)
+
+if __name__ == "__main__":
+    register()
 
 class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):  
     bl_label = "Views"
@@ -305,4 +343,3 @@ def PlaceImage(self):
             else:
                 self.report({'ERROR'}, "No inputted Image.")
                 Itervalue = Itervalue + 1
-
