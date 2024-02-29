@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from .image_processing import Feature_detection, PlaneItem
 from .bcrypt_password import hash_password
 from .authentication import login_account, register_account
-from .blender_operations import DrawMeshToScreen
+from .blender_operations import DrawAllMeshesToScreen
 
 
 @dataclass
@@ -220,5 +220,5 @@ class TestPlaceMesh(bpy.types.Operator):
     bl_label ="Place Mesh"
 
     def execute(self, context):
-        DrawMeshToScreen([0, 255, 0], 5, self, GlobalPlaneDataArray)
+        DrawAllMeshesToScreen((0, 255, 0), 5, self, GlobalPlaneDataArray)
         return {'FINISHED'}
