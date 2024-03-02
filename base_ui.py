@@ -57,8 +57,6 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row = layout.row()
         row.operator("wm.test_connection_operator", text="Test Connection")
         row = layout.row()
-        row.operator("wm.database_login_popup", text="Access Database")
-        row = layout.row()
         row.operator("wm.prepare_image_operator", text="Test Image Prep")
         row = layout.row()
         row.operator("wm.save_file_to_db_operator", text="Save File to DB")
@@ -66,6 +64,8 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row.operator("wm.get_file_from_db_operator", text="Get File from DB")
         row = layout.row()
         row.operator("wm.delete_file_from_db_operator", text="Delete File from DB")
+        row = layout.row()
+        row.operator("wm.toast_notification", text="Toast Test")
 
 class AccessDbCustomPanel(bpy.types.Panel):
     """Panel to display the custom list and button"""
