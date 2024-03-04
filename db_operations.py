@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId # unsure if needed
+import os
 
 from .file_conversion import encode_file, decode_file
 from .db_entities import create_file_document, create_user_document
@@ -36,15 +37,21 @@ def test_connection():
 
 # saves files to db.
 # encodes file in specified file_path parameter, creates a json with the data and inserts into Files collection in the Db
-def save_file_to_db(userId, file_path, file_name):
+def save_file_to_db(userId, file_path_db, file_name):
 
     db =  connect_to_db()
-    collection = db['Files']
+    collection = db['Files'] # temporary collection
 
-    file_encoded = encode_file(file_path)
+    # ideally this is going to be file_path_db; the file we want to convert to binary and save in the database. since this is not currently connected to the workflow of the
+    # plugin, we left hardcoded to be able to perform a demonstration.
+    blend_file_path = file_path_db
+    blend_file_name = os.path.basename(blend_file_path)
 
-    # shapes data for db document
-    data = create_file_document(userId, file_name, file_encoded.getvalue())
+    file_encoded = encode_file(blend_file_path)
+
+    # the format of data will likely change after login and registration implemented
+    # userId, file_name and file_bin_data. userId currently placeholder
+    data = create_file_document("123", blend_file_name, file_encoded.getvalue())
 
     collection.insert_one(data)
 
@@ -132,8 +139,6 @@ def get_user_by_email(user_email):
     db.client.close()
 
     return user
-
-
 
 
 

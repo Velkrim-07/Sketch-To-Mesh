@@ -1,25 +1,16 @@
 import bpy
 import os
-import cv2
 import os.path
+import blf
+import bpy.types
 from os import path
+import numpy as np
 from dataclasses import dataclass
-from .image_processing import prepare_image, detect_and_describe_akaze, outline_image, match_features, draw_matches
+from .image_processing import Feature_detection, PlaneItem
 from .bcrypt_password import hash_password
 from .authentication import login_account, register_account
 from .db_operations import get_files_by_user_id
-
-
-@dataclass
-class PlaneItem:
-    PlaneFilepath = bpy.props.StringProperty(name="File Path",subtype='FILE_PATH')
-    PlaneRotation = bpy.props.IntProperty(name="Rotation", default=0)
-    ImagePlaneName: str
-    ImagePlaneFilePath: str
-    
-    def __init__(self, filepath ,rotation):
-        self.PlaneFilepath = filepath
-        self.PlaneRotation = rotation
+from .blender_operations import DrawAllMeshesToScreen
 
 @dataclass
 class UserData:
@@ -31,14 +22,40 @@ class UserData:
         self.user_documents = [] # testing
         self.UserSignedIn = SignIn
 
-
 User: UserData = UserData(False)
-GlobalPlaneDataArray : list[PlaneItem] = [] #this will eventually replace the two array under this
+GlobalPlaneDataArray : list[PlaneItem] = [] # this will eventually replace the two array under this
+
+def draw_callback_px(self, context, message):
+    font_id = 0
+    blf.position(font_id, 15, 30, 0)
+    blf.size(font_id, 20)
+    blf.draw(font_id, message)
+    
+class NotificationPopup(bpy.types.Operator):
+    bl_idname = "wm.toast_notification"
+    bl_label = "Show Toast Notification"
+    
+    message: bpy.props.StringProperty(name="Message",description="The message to display in the toast",default="Toast Notification!" )
+
+    def execute(self, context):
+        args = (self, context, self.message)
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+        self.report({'INFO'}, "OK Pressed")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):    
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+
+        self.layout.label(text=self.message)
   
 # Operator to add a new plane item
+# adds new image to be analyzed
 class OBJECT_OT_add_plane_item(bpy.types.Operator):
     bl_idname = "object.add_plane_item"
     bl_label = "Add Plane Item"
+    bl_description = "Select and add new images to be processed"
 
     def execute(self, context):
         #adds the plane Itme to the Plane Item List
@@ -88,16 +105,18 @@ class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):
 
 class PlaceImageIn3D(bpy.types.Operator):
     bl_idname = "object.place_image_in_space"
-    bl_label ="Place Images"
+    bl_label = "Place Images"
+    bl_description = "Sends images to feature detection" # rework possibly?
 
     def execute(self, context):
         Feature_detection(self=self, PlaneDataArray=GlobalPlaneDataArray)
         return {'FINISHED'}
-    
+
 
 class Reset_Input_Images(bpy.types.Operator): 
     bl_idname = "object.reset_selected_images"
     bl_label = "Reset_Images"
+    bl_description = "Reset previously selected images"
 
     def execute(self, context):
         Itervalue = 0
@@ -122,6 +141,7 @@ class Reset_Input_Images(bpy.types.Operator):
 class DataBaseLogin(bpy.types.Operator):
     bl_idname = "wm.database_login"
     bl_label = "Database Login"
+    bl_description = "Login into the Database in order to access user stored data"
 
     DBUserNameInput = ""
     DBPasswordInput = ""
@@ -140,6 +160,9 @@ class DataBaseLogin(bpy.types.Operator):
         if result == 0: # credentials incorrect
             self.report({'INFO'}, "Credentials Incorrect.")
         if result == 1:
+            
+            bpy.ops.wm.toast_notification('INVOKE_DEFAULT', message="Login Successful")
+            
             self.report({'INFO'}, "Login Successful.")
             User.UserSignedIn = True
         if result == -1:
@@ -161,6 +184,7 @@ class DataBaseLogin(bpy.types.Operator):
 class DataBaseLogout(bpy.types.Operator):
     bl_idname = "wm.user_logout"
     bl_label = "Logout"
+    bl_description = "Logout from the Database"
     
     def execute(self, context):
     
@@ -179,6 +203,7 @@ class DataBaseLogout(bpy.types.Operator):
 class DataBaseRegister(bpy.types.Operator):
     bl_idname = "wm.database_register"
     bl_label = "Database Register"
+    bl_description = "Register new account to utilize Database services"
 
     DBUserNameInput = ""
     DBPasswordInput = ""
@@ -248,6 +273,7 @@ class DocumentItem(bpy.types.PropertyGroup):
 class UserAccessDb(bpy.types.Operator):
     bl_idname = "wm.database_access_menu"
     bl_label = "Access Database"
+    bl_description = "Retrieve or upload documents into the Database"
 
     def execute(self, context):
         
@@ -292,94 +318,11 @@ class UserAccessDb(bpy.types.Operator):
             return {'CANCELLED'}
         return {'FINISHED'}
         
-# TODO: remove from ui-operations to image_processing
-def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
-    KeyPoints: list = []
-    Descriptors: list = []
-    Matches: list = []
-    Images: list = []
-    Matched_Images: list = []
-    ImageNames: list = []
-    
-    PlaceImage(self) # processes the images
 
-    if(PlaneDataArray.__len__() > 1):
-        PlaneIndex = 0
-        for PlaneData in PlaneDataArray:
-            keypoints1, descriptors1 = detect_and_describe_akaze(PlaneData.PlaneFilepath)
-            Images.append(cv2.imread(PlaneData.PlaneFilepath))
-            KeyPoints.append(keypoints1)
-            Descriptors.append(descriptors1)
-            ImageNames.append("MatchedView" + str(PlaneIndex) + PlaneData.PlaneFilepath[PlaneData.PlaneFilepath.rfind("."): ] ) 
+class TestPlaceMesh(bpy.types.Operator):
+    bl_idname = "wm.place_mesh"
+    bl_label ="Place Mesh"
 
-        #this should follow this format : #12 #23 #31
-        DescriptionIndex = 0
-        for descriptors in Descriptors:
-            if(DescriptionIndex + 1 != Descriptors.__len__()): NextDesc = Descriptors[DescriptionIndex + 1] #Gets the next descriptor 
-            else: NextDesc = Descriptors[0] # if we get to the last index
-            Matches.append(match_features(descriptors, NextDesc, method='AKAZE')) 
-            DescriptionIndex = DescriptionIndex + 1 
-
-        IndexForKeypoints = 0
-        for Keypoint in KeyPoints:
-            if(IndexForKeypoints + 1 != KeyPoints.__len__()):
-                NextKey = KeyPoints[IndexForKeypoints + 1] #Gets the next descriptor
-                NextImage = Images[IndexForKeypoints + 1]
-            else:
-                NextKey = KeyPoints[0] # if we get to the last index
-                NextImage = Images[0]
-            Matched_Images.append(draw_matches(Images[IndexForKeypoints], Keypoint, NextImage, NextKey, Matches[IndexForKeypoints]))
-            IndexForKeypoints = IndexForKeypoints + 1
-
-        MImageIndex = 0
-        for MImages in Matched_Images:
-            try:
-                os.chdir("Matched_Images_Folder") #changes the directory to the folder where we are going to save the file
-                cv2.imwrite(ImageNames[MImageIndex], MImages) #saves the image
-                os.chdir("..\\") #goes back one directory   
-                print(f"Image prep done.")
-                return True
-            except Exception as e:
-                print(f"Error: {e}")
-                return False
-
-# TODO: move to blend-operations
-def PlaceImage(self):
-     #this will keep count of the views were have captured
-        Itervalue = 0
-        #this will be a folder in the sketch-to-Mesh project. This will hold the Image processed
-        ImageDiretoryForNewImage = "ImageFolder"
-        #this will eventually need to move to somewhere more accessable
-        #this is only here for now
-    
-        for plane_data in GlobalPlaneDataArray : 
-            if plane_data :
-                #this is used for the new image. We want to save the new image as the same type of file as the first
-                Extension =  plane_data.PlaneFilepath[plane_data.PlaneFilepath.rfind("."): ] 
-                plane_data.ImagePlaneName = "View" + str(Itervalue) #this is the file name for the image we are creating
-                # allows us to access the plane after creation
-                outline_image(plane_data.PlaneFilepath, Extension, plane_data.ImagePlaneName, ImageDiretoryForNewImage)
-                #this creates a new file path to the image we just saved
-                plane_data.ImagePlaneFilePath = os.path.abspath(ImageDiretoryForNewImage + "\\" + plane_data.ImagePlaneName + Extension) 
-                
-                if plane_data.ImagePlaneFilePath:
-                    filename = os.path.basename(plane_data.ImagePlaneFilePath)
-                    FileDirectory = plane_data.ImagePlaneFilePath[: plane_data.ImagePlaneFilePath.rfind("\\")] + "\\"
-                    #bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
-                    bpy.ops.import_image.to_plane(files=[{"name":filename, "name":filename}], directory=FileDirectory, relative=False)
-                    #we set the rotation and location of each plane
-                    bpy.data.objects[plane_data.ImagePlaneName].select_set(True)
-                    match Itervalue :
-                        case 1: bpy.ops.transform.translate(value=(-0.01, 0 , 0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, True, False), mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False, alt_navigation=True)
-                        case 2: bpy.context.object.rotation_euler[2] = 0
-                else:
-                    match Itervalue:
-                        case 0: MissingView = "FrontView"
-                        case 1: MissingView = "BackView"
-                        case 2: MissingView = "SideView"
-                    self.report({'ERROR'}, "No inputted Image for" + MissingView)
-                Itervalue = Itervalue + 1
-            else:
-                self.report({'ERROR'}, "No inputted Image.")
-                Itervalue = Itervalue + 1
-
+    def execute(self, context):
+        DrawAllMeshesToScreen((0, 255, 0), 5, self, GlobalPlaneDataArray)
+        return {'FINISHED'}

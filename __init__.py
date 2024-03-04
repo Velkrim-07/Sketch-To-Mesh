@@ -10,8 +10,9 @@ bl_info = {
     
 import bpy
 
-from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu, UserAccessDb, DocumentItem, DataBaseLogout
-from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId
+from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu, TestPlaceMesh, UserAccessDb, DocumentItem, DataBaseLogout, NotificationPopup
+from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId, ExportToDatabase
+
 from .base_ui import VIEW3D_PT_Sketch_To_Mesh_Panel, VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel, VIEW3D_PT_Sketch_To_Mesh_Testing, AccessDbCustomPanel
 
 def register():
@@ -35,6 +36,7 @@ def register():
     bpy.utils.register_class(DoImg)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+    bpy.utils.register_class(NotificationPopup)
 
     # db
     bpy.utils.register_class(UserAccessDb)
@@ -46,6 +48,8 @@ def register():
     bpy.types.Scene.my_document_index = bpy.props.IntProperty()
     
     # Tests
+    bpy.utils.register_class(TestPlaceMesh)
+    bpy.utils.register_class(ExportToDatabase)
     bpy.utils.register_class(DataBaseUIMenu)
     bpy.utils.register_class(DataBaseRegister)
     bpy.utils.register_class(DataBaseLogin)
@@ -77,6 +81,7 @@ def unregister():
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+    bpy.utils.unregister_class(NotificationPopup)
 
     # db
     bpy.utils.unregister_class(UserAccessDb)
@@ -88,6 +93,8 @@ def unregister():
 
     # db test connection and image prep
     # Tests
+    bpy.utils.unregister_class(TestPlaceMesh)
+    bpy.utils.unregister_class(ExportToDatabase)
     bpy.utils.unregister_class(DataBaseUIMenu)
     bpy.utils.unregister_class(DataBaseRegister)
     bpy.utils.unregister_class(DataBaseLogin)
