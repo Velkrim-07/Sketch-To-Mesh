@@ -2,17 +2,16 @@ import bpy
 import os
 import math
 import cv2
-import mathutils
-from .db_operations import save_file_to_db
 from .image_processing import PlaneItem
 
 
 def saveObj():
     filepath = os.path.abspath("ExportFolder\\TempExport.fbx")
+
     bpy.ops.object.select_all()
     bpy.ops.export_mesh.stl(filepath=filepath,  check_existing=True, use_selection=True)
-
-    save_file_to_db(filepath)
+    filepathAndName = (filepath, os.path.basename(filepath) )
+    return filepathAndName
 
 def GetlistOfPixels(ColorWeAreLookingFor, plane:PlaneItem): #(0, 255, 0) # Green at the moment.
     ImageDictionary = {}

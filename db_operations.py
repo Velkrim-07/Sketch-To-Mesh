@@ -45,7 +45,7 @@ def save_file_to_db(userId, file_path_db, file_name):
     # ideally this is going to be file_path_db; the file we want to convert to binary and save in the database. since this is not currently connected to the workflow of the
     # plugin, we left hardcoded to be able to perform a demonstration.
     blend_file_path = file_path_db
-    blend_file_name = os.path.basename(blend_file_name)
+    blend_file_name = os.path.basename(blend_file_path)
 
     file_encoded = encode_file(blend_file_path)
 
@@ -139,8 +139,6 @@ def get_user_by_email(user_email):
     db.client.close()
 
     return user
-
-
 
 
 

@@ -130,5 +130,6 @@ class ExportToDatabase(bpy.types.Operator):
     bl_label = "Test Database Export"
 
     def execute(self, context): 
-        saveObj()
+        filepath = saveObj() #get file name and pass that file name to the save_file_to_db
+        save_file_to_db("123", filepath[0], filepath[1] )
         return {'FINISHED'}
