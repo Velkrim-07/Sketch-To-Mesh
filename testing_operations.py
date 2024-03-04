@@ -1,6 +1,8 @@
 import bpy
 from .db_operations import test_connection, save_file_to_db, get_files_by_user_id, delete_files_by_object_id # the . is on purpose. do not remove
-from .image_processing import prepare_image, test_feature_detection # the . is on purpose. do not remove
+from .image_processing import test_feature_detection # the . is on purpose. do not remove
+from .blender_operations import DrawMeshToScreen
+from .blender_operations import saveObj
 
 # Saving info 
 # bpy.ops.wm.save_as_mainfile(filepath="c:\Users\James Burns\Documents\TestFile.blend")
@@ -95,7 +97,6 @@ class StMTestDecodeAndImport(bpy.types.Operator):
     bl_description = "Decodes file from Database and imports into the Blender scene"
 
     def execute(self, context): 
-
         # whatever james is doing here
         success = test_connection()
         if success:
@@ -122,3 +123,13 @@ class DoImg(bpy.types.Operator):
         # Open a file browser to select a file
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}  
+    
+
+class ExportToDatabase(bpy.types.Operator):
+    bl_idname = "wm.database_export"
+    bl_label = "Test Database Export"
+
+    def execute(self, context): 
+        filepath = saveObj() #get file name and pass that file name to the save_file_to_db
+        save_file_to_db("123", filepath[0], filepath[1] )
+        return {'FINISHED'}
