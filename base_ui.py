@@ -68,7 +68,7 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row.operator("wm.database_export", text="Export File")
         row = layout.row()
         row.operator("wm.place_mesh", text="Place Mesh")
-         row = layout.row()
+        row = layout.row()
         row.operator("wm.toast_notification", text="Toast Test")
 
 class AccessDbCustomPanel(bpy.types.Panel):

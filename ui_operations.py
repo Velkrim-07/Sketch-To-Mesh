@@ -324,5 +324,6 @@ class TestPlaceMesh(bpy.types.Operator):
     bl_label ="Place Mesh"
 
     def execute(self, context):
-        DrawAllMeshesToScreen((0, 255, 0), 5, self, GlobalPlaneDataArray)
+        poly_count_value = bpy.context.scene.poly_count_range
+        DrawAllMeshesToScreen((0, 255, 0), poly_count_value, self, GlobalPlaneDataArray)
         return {'FINISHED'}

@@ -14,7 +14,12 @@ def saveObj():
     return filepathAndName
 
 def GetlistOfPixels(ColorWeAreLookingFor, plane:PlaneItem): #(0, 255, 0) # Green at the moment.
-    ImageDictionary = {}
+    """
+    The Dictionary below is used to hold the placement of pixels positions
+    The key for this dictionary is the "side" the pixel is located on
+    Example for the dataset is: {0: [(176,142), (175, 143)...]}
+    """
+    ImageDictionary = {} #Dictionary that holds the placement of the pixels, the side is the key 
     Image = cv2.imread(plane.ImagePlaneFilePath)
     for iterator in range(4):
         match iterator: # this will loop through the image and gather the green pxiels outlined on each side
