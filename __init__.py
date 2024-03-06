@@ -63,10 +63,11 @@ def unregister():
     bpy.utils.unregister_class(Reset_Input_Images)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
-    bpy.utils.unregister_class(PlaceImageIn3D)
+    bpy.utils.unregister_class(PlaceImageIn3D)    
     bpy.utils.unregister_class(DoImg)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Testing)
+    
     # db test connection and image prep
     # Tests
     bpy.utils.unregister_class(DataBaseUIMenu)

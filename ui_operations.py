@@ -1,7 +1,5 @@
-from typing import Set
 import bpy
 import os
-from bpy.types import Context
 import cv2
 import os.path
 from os import path
@@ -11,85 +9,63 @@ from bpy.types import Operator, Panel
 #from image_processing import prepare_image, detect_and_describe_akaze, outline_image, match_features, draw_matches
 #from bcrypt_password import hash_password
 #from authentication import login_account, register_account
+
+
+
 @dataclass
 class PlaneItem:
-    PlaneFilepath: str
-    PlaneRotation: int
-    ImagePlaneName: str = ""
-    ImagePlaneFilePath: str = ""
-    selected_for_removal: bool = False
+    PlaneFilepath = bpy.props.StringProperty(name="File Path", subtype='FILE_PATH')
+    PlaneRotation = bpy.props.IntProperty(name="Rotation", default=0)
+    ImagePlaneName: str
+    ImagePlaneFilePath: str
+    
+    def __init__(self, filepath ,rotation):
+        self.PlaneFilepath = filepath
+        self.PlaneRotation = rotation
 
-    def __init__(self, **kwargs):
-        self.PlaneFilepath = kwargs.get('filepath', '')
-        self.PlaneRotation = kwargs.get('rotation', 0)
 
-
+@dataclass
 class UserData:
+    UserSignedIn = False
+    
     def __init__(self, SignIn):
         self.UserSignedIn = SignIn
 
-User = UserData(False)
-GlobalPlaneDataArray = []
 
-class OBJECT_OT_add_plane_item(Operator):
+User: UserData = UserData(False)
+GlobalPlaneDataArray : list[PlaneItem] = [] #this will eventually replace the two array under this
+isSymmetrical = False  # Bool to switch between symmetrical and default function paths
+  
+# Operator to add a new plane item
+class OBJECT_OT_add_plane_item(bpy.types.Operator):
     bl_idname = "object.add_plane_item"
     bl_label = "Add Plane Item"
-    filepath: StringProperty(subtype="FILE_PATH")
+    
+    isSymmetrical: bpy.props.BoolProperty(name="Is Symmetrical", default=False)
+    isComplex: bpy.props.BoolProperty(name="Is Complex", default=False)  # Add the boolean property
 
     def execute(self, context):
-        global GlobalPlaneDataArray
-        plane_item = PlaneItem(filepath=self.filepath, rotation=0)  # Assuming default rotation is 0
-        GlobalPlaneDataArray.append(plane_item)
+        # Adds the plane item to the Plane Item List
+        NewFileRotationPair = PlaneItem(bpy.context.scene.PlaneFilePath, bpy.context.scene.PlaneRotation, self.isSymmetrical)
+        GlobalPlaneDataArray.append(NewFileRotationPair)
         return {'FINISHED'}
+
+    def draw(self, context):    
+        layout = self.layout   
+        row = layout.row()
+        row.prop(context.scene, "PlaneFilePath", text="File Path")
+        row = layout.row()
+        row.prop(context.scene, "PlaneRotation", text="Rotation", slider=True)
+        row = layout.row()
+        row.prop(self, "isSymmetrical", text="Is Symmetrical")
+        row = layout.row()
+        row.prop(self, "isComplex", text="Is Complex")  # Add the property to the UI
 
     def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-class OBJECT_OT_remove_plane_item(Operator):
-    bl_idname = "object.remove_plane_item"
-    bl_label = "Remove Plane Item"
-    index: IntProperty()
-   
-    def execute(self, context):
-        scene = context.scene
-        if 'custom_plane_items' in scene:
-            del scene['custom_plane_items'][self.index]
-        return {'FINISHED'}
+        return context.window_manager.invoke_props_dialog(self)
 
 
-class VIEW3D_PT_CustomPanel(Panel):
-    bl_label = "Image Management"
-    bl_idname = "VIEW3D_PT_CUSTOM_image_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Tool'
-    
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        plane_items = scene.get('custom_plane_items', [])
-        
-        for index, filepath in enumerate(plane_items):
-            box = layout.box()
-            row = box.row()
-            row.label(text=filepath)
-            row.operator("object.remove_plane_item", text="Remove", icon='REMOVE').index = index
-        
-        layout.operator("object.add_plane_item", text="Add Image")
 
-def register():
-    bpy.utils.register_class(OBJECT_OT_add_plane_item)
-    bpy.utils.register_class(OBJECT_OT_remove_plane_item)
-    bpy.utils.register_class(VIEW3D_PT_CustomPanel)
-
-def unregister():
-    bpy.utils.unregister_class(OBJECT_OT_add_plane_item)
-    bpy.utils.unregister_class(OBJECT_OT_remove_plane_item)
-    bpy.utils.unregister_class(VIEW3D_PT_CustomPanel)
-
-if __name__ == "__main__":
-    register()
 
 class VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel(bpy.types.Panel):  
     bl_label = "Views"
@@ -125,7 +101,10 @@ class PlaceImageIn3D(bpy.types.Operator):
     bl_label ="Place Images"
 
     def execute(self, context):
-        Feature_detection(self=self, PlaneDataArray=GlobalPlaneDataArray)
+        if isSymmetrical:
+            Feature_detection_colored_vertices(self=self, PlaneDataArray=GlobalPlaneDataArray)
+        else:
+            Feature_detection(self=self, PlaneDataArray=GlobalPlaneDataArray)
         return {'FINISHED'}
     
 
@@ -254,7 +233,6 @@ class DataBaseUIMenu(bpy.types.Panel):
             row = layout.row()
             row.operator("mesh.primitive_cube_add", text="Logout")
 
-
 def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
     KeyPoints: list = []
     Descriptors: list = []
@@ -274,36 +252,9 @@ def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
             Descriptors.append(descriptors1)
             ImageNames.append("MatchedView" + str(PlaneIndex) + PlaneData.PlaneFilepath[PlaneData.PlaneFilepath.rfind("."): ] ) 
 
-        #this should follow this format : #12 #23 #31
-        DescriptionIndex = 0
-        for descriptors in Descriptors:
-            if(DescriptionIndex + 1 != Descriptors.__len__()): NextDesc = Descriptors[DescriptionIndex + 1] #Gets the next descriptor 
-            else: NextDesc = Descriptors[0] # if we get to the last index
-            Matches.append(match_features(descriptors, NextDesc, method='AKAZE')) 
-            DescriptionIndex = DescriptionIndex + 1 
-
-        IndexForKeypoints = 0
-        for Keypoint in KeyPoints:
-            if(IndexForKeypoints + 1 != KeyPoints.__len__()):
-                NextKey = KeyPoints[IndexForKeypoints + 1] #Gets the next descriptor
-                NextImage = Images[IndexForKeypoints + 1]
-            else:
-                NextKey = KeyPoints[0] # if we get to the last index
-                NextImage = Images[0]
-            Matched_Images.append(draw_matches(Images[IndexForKeypoints], Keypoint, NextImage, NextKey, Matches[IndexForKeypoints]))
-            IndexForKeypoints = IndexForKeypoints + 1
-
-        MImageIndex = 0
-        for MImages in Matched_Images:
-            try:
-                os.chdir("Matched_Images_Folder") #changes the directory to the folder where we are going to save the file
-                cv2.imwrite(ImageNames[MImageIndex], MImages) #saves the image
-                os.chdir("..\\") #goes back one directory   
-                print(f"Image prep done.")
-                return True
-            except Exception as e:
-                print(f"Error: {e}")
-                return False
+def Feature_detection_colored_vertices(self, PlaneDataArray : list[PlaneItem]):
+    # Colored vertices implementation
+    pass
 
 def PlaceImage(self):
      #this will keep count of the views were have captured
@@ -343,3 +294,17 @@ def PlaceImage(self):
             else:
                 self.report({'ERROR'}, "No inputted Image.")
                 Itervalue = Itervalue + 1
+
+
+def register():
+    bpy.utils.register_class(OBJECT_OT_add_plane_item)
+    bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
+
+
+def unregister():
+    bpy.utils.unregister_class(OBJECT_OT_add_plane_item)
+    bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
+
+
+if __name__ == "__main__":
+    register()
