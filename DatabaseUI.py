@@ -1,6 +1,4 @@
 import bpy
-import os
-from bpy.types import Context
 from .bcrypt_password import hash_password
 from .authentication import login_account, register_account
 from .db_operations import get_files_by_user_id, delete_files_by_object_id, save_file_to_db
@@ -135,9 +133,6 @@ class AccessDatabase(bpy.types.Operator):
         row.operator('wm.add_database', text='Export')
         row.operator('wm.import_from_database', text='Import')
 
-
-        
-
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
     
@@ -186,9 +181,9 @@ class PullFromDatabase(bpy.types.Operator):
     bl_label = "Pull"
 
     def execute(self, context): 
-        for doc in User.user_documents:
+        for doc in User.user_documents: #gets all of the documents in a specfic user's document
             prop = context.scene.my_document_collection.add() #0 should be the first found property
-            prop.name =doc['fileName']
+            prop.name =doc['fileName'] #saves the name of the document in the list
         return{'FINISHED'}
     
 
@@ -202,14 +197,13 @@ class DeleteFromDatabase(bpy.types.Operator):
         ItemToDeleteName = DatabaseList[index].name
         
         for doc in User.user_documents :
-            val:str = doc['fileName']
-            if val == ItemToDeleteName:
-                dataToDelete = doc['_id']
-                delete_files_by_object_id(dataToDelete)
+            val:str = doc['fileName'] #saves the name of the file to varible
+            if val == ItemToDeleteName: #if we find the file then we delete it
+                dataToDelete = doc['_id'] #gets the id of the data we want to delete
+                delete_files_by_object_id(dataToDelete) #deletes the found files from the database
                 break
-        #DatabaseList[index]['_id'])
-        DatabaseList.remove(index) 
-        context.scene.my_document_index = min(max(0, index - 1), len(DatabaseList) - 1)
+        DatabaseList.remove(index) #removes the index from the list
+        context.scene.my_document_index = min(max(0, index - 1), len(DatabaseList) - 1) #sets the list to a 
         return{'FINISHED'}
     
 
@@ -218,12 +212,12 @@ class AddToDatabase(bpy.types.Operator):
     bl_label = "Export"
 
     def execute(self, context):
-        DatabaseList = context.scene.my_document_collection
+        DatabaseList = context.scene.my_document_collection #grabs the collection 
         filepath = saveObj() #get file name and pass that file name to the save_file_to_db
-        save_file_to_db(User.user_info[0]['_id'], filepath[0], filepath[1] )
+        save_file_to_db(User.user_info[0]['_id'], filepath[0], filepath[1] ) #sends the data to the databse
 
-        curr_item = DatabaseList.add()
-        curr_item.name = filepath[1] 
+        curr_item = DatabaseList.add() #creates a new space in the list
+        curr_item.name = filepath[1] #sets the item to the same name of the file
         return{'FINISHED'}
     
 
@@ -232,16 +226,15 @@ class ImportFromDataBase(bpy.types.Operator):
     bl_label = "Import"
 
     def execute(self, context):
-        DatabaseList = context.scene.my_document_collection
-        index = context.scene.my_document_index 
-        ItemToImportName = DatabaseList[index].name
+        DatabaseList = context.scene.my_document_collection #grabs the collection 
+        index = context.scene.my_document_index #grabs the index that is selected
+        ItemToImportName = DatabaseList[index].name #gets the name of the file we want to import
         ItemToImportExt = ItemToImportName[ItemToImportName.rfind("."):]
        
-        for doc in User.user_documents :
-            val:str = doc['fileName']
+        for doc in User.user_documents : #loops through the documents that are saved in the User Documents
+            val:str = doc['fileName'] #sets the filename of the verible to a value
             if val == ItemToImportName:
                 DataSave = doc['fileEncoded'] #the saved data from the database
-                decode_file(DataSave, ItemToImportExt)
+                decode_file(DataSave, ItemToImportExt) #the file is sent to the daatabase
                 break
-
         return{'FINISHED'}
