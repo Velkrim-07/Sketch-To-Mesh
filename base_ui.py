@@ -30,7 +30,7 @@ class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):
         layout = self.layout
         layout.label(text="Mesh Settings")
         row = layout.row()
-        row.prop(context.scene, "poly_count_range", text="Poly Count", slider=True)
+        row.prop(context.scene, "poly_count_range", text="Vertices Separator", slider=True)
         row = layout.row()
         row.operator("mesh.primitive_cube_add", text="Regenerate Preview Mesh")
         row = layout.row()
@@ -68,9 +68,12 @@ class VIEW3D_PT_Sketch_To_Mesh_Testing(bpy.types.Panel):
         row.operator("wm.database_export", text="Export File")
         row = layout.row()
         row.operator("wm.place_mesh", text="Place Mesh")
-         row = layout.row()
+        row = layout.row()
         row.operator("wm.toast_notification", text="Toast Test")
 
+
+
+#what is this and why can't i find open_custom_window
 class AccessDbCustomPanel(bpy.types.Panel):
     """Panel to display the custom list and button"""
     bl_label = "Custom Data Panel"
@@ -84,4 +87,5 @@ class AccessDbCustomPanel(bpy.types.Panel):
 
         # Button to open the new window and display the list
         layout.operator("wm.open_custom_window", text="Open Custom Window")
+
 

@@ -2,12 +2,14 @@ import bpy
 import os
 import math
 import cv2
+import io
+import tempfile
 from .image_processing import PlaneItem
+from .file_conversion import blend_opener, fbx_opener
 
 
 def saveObj():
     filepath = os.path.abspath("ExportFolder\\TempExport.fbx")
-
     bpy.ops.object.select_all()
     bpy.ops.export_mesh.stl(filepath=filepath,  check_existing=True, use_selection=True)
     filepathAndName = (filepath, os.path.basename(filepath) )
@@ -144,7 +146,6 @@ def DrawMeshToScreen(ColorWeAreLookingFor, PolyCount, self, plane:PlaneItem):
     else:
         # make mesh
         new_mesh = bpy.data.meshes.new('new_mesh')
-        
         new_mesh.from_pydata(MeshStructure[0], MeshStructure[2], MeshStructure[1])
         new_mesh.update()
         # make object from mesh
@@ -158,3 +159,39 @@ def DrawMeshToScreen(ColorWeAreLookingFor, PolyCount, self, plane:PlaneItem):
 def DrawAllMeshesToScreen(ColorWeAreLookingFor, PolyCount, self, PlaneArray:list[PlaneItem]):
     for plane in PlaneArray:
         DrawMeshToScreen(ColorWeAreLookingFor, PolyCount, self, plane)
+
+
+# TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
+def encode_file(file_path):
+    
+   with open(file_path, "rb") as file:
+        blend_file_contents = io.BytesIO(file.read())
+        return blend_file_contents
+
+# TODO: return something that is not 0. case handling and error handling, as well as completed and noncompleted states.
+def decode_file(data, file_extension):
+    #Apparently the data doesn't need to be decoded so we will handle the different
+    #file extensions handled here instead of outside the file_conversion.py file
+
+    #write the data into a temporary file
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) #we'll probably have to add another parameter here for the file extension or soemthing else)
+    temp_file.write(data)
+    temp_file.close()
+
+    #Deal with the separate file extensions
+    match file_extension :
+        case ".blend":
+            blend_opener(temp_file.name)
+        case ".fbx":
+            fbx_opener(temp_file.name)
+        case _: #defualt case # if there is an image file
+            bpy.ops.import_image.to_plane(files=[{"name":temp_file.name, "name":temp_file.name}], directory="", relative=False)
+        
+
+
+    #remove the temp file
+    os.unlink(temp_file.name)
+
+    #if we are returning just the file back then cases checking will have to happen outside of this method
+    return 0
+

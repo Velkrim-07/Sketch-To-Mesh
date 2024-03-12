@@ -10,23 +10,26 @@ bl_info = {
     
 import bpy
 
-from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D, DataBaseLogin, DataBaseRegister, DataBaseUIMenu, TestPlaceMesh, UserAccessDb, DocumentItem, DataBaseLogout, NotificationPopup
+from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D,  TestPlaceMesh,  NotificationPopup
 from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId, ExportToDatabase
-
+from .DatabaseUI import DataBaseLogin, DataBaseRegister, DataBaseUIMenu, DocumentItem, DataBaseLogout,  DataBase_UIList, DeleteFromDatabase, AccessDatabase, AddToDatabase, ImportFromDataBase
 from .base_ui import VIEW3D_PT_Sketch_To_Mesh_Panel, VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel, VIEW3D_PT_Sketch_To_Mesh_Testing, AccessDbCustomPanel
 
 def register():
-    bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Poly Count", default=10, min=0, max=100)
+    bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Vertice Separation Modifer", default=10, min=0, max=100)
     bpy.types.Scene.mesh_rating = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Image Center Y", default=10, min=0, max=100)
     bpy.types.Scene.FileName_Input = bpy.props.StringProperty(name="FileName", default="STMFile")
+
     #Database Properties
     bpy.types.Scene.DB_Username = bpy.props.StringProperty(name="DBUsername", default="")
     bpy.types.Scene.DB_Password = bpy.props.StringProperty(name="DBPassword", default="")
+
     #Plane data Properites
     bpy.types.Scene.PlaneFilePath = bpy.props.StringProperty(name="File Path",subtype='FILE_PATH')
     bpy.types.Scene.PlaneRotation = bpy.props.IntProperty(name="Image Center Y", default=0, min=-180, max=180)
+
     #Classes
     bpy.utils.register_class(OBJECT_OT_add_plane_item)
     bpy.utils.register_class(Reset_Input_Images)
@@ -39,13 +42,16 @@ def register():
     bpy.utils.register_class(NotificationPopup)
 
     # db
-    bpy.utils.register_class(UserAccessDb)
-    bpy.utils.register_class(AccessDbCustomPanel) 
-    bpy.utils.register_class(DataBaseLogout) 
-    
-    bpy.utils.register_class(DocumentItem)
+    bpy.utils.register_class(DocumentItem)    
     bpy.types.Scene.my_document_collection = bpy.props.CollectionProperty(type=DocumentItem)
     bpy.types.Scene.my_document_index = bpy.props.IntProperty()
+    bpy.utils.register_class(AddToDatabase)
+    bpy.utils.register_class(AccessDbCustomPanel) 
+    bpy.utils.register_class(AccessDatabase)
+    bpy.utils.register_class(DataBaseLogout) 
+    bpy.utils.register_class(DataBase_UIList)
+    bpy.utils.register_class(DeleteFromDatabase)
+    bpy.utils.register_class(ImportFromDataBase)
     
     # Tests
     bpy.utils.register_class(TestPlaceMesh)
@@ -84,10 +90,14 @@ def unregister():
     bpy.utils.unregister_class(NotificationPopup)
 
     # db
-    bpy.utils.unregister_class(UserAccessDb)
+    bpy.utils.unregister_class(AddToDatabase)
     bpy.utils.unregister_class(AccessDbCustomPanel)
     bpy.utils.unregister_class(DataBaseLogout)
+    bpy.utils.unregister_class(AccessDatabase)
+    bpy.utils.unregister_class(DataBase_UIList)
     bpy.utils.unregister_class(DocumentItem)
+    bpy.utils.unregister_class(DeleteFromDatabase)
+    bpy.utils.unregister_class(ImportFromDataBase)
     del bpy.types.Scene.my_document_collection
     del bpy.types.Scene.my_document_index
 
