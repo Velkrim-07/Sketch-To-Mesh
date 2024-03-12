@@ -12,11 +12,11 @@ import bpy
 
 from .ui_operations import OBJECT_OT_add_plane_item,  Reset_Input_Images, VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel, PlaceImageIn3D,  TestPlaceMesh,  NotificationPopup
 from .testing_operations import DoImg, StMTestImagePrep, StMTestSaveFileToDb, StMTestConnectionOperator, StMTestGetFileFromDbFromUserId, StMTestDeleteFileFromDbFromUserId, ExportToDatabase
-from .DatabaseUI import DataBaseLogin, DataBaseRegister, DataBaseUIMenu, DocumentItem, DataBaseLogout,  DataBase_UIList, PullFromDatabase, DeleteFromDatabase, AccessDatabase, AddToDatabase, ImportFromDataBase
+from .DatabaseUI import DataBaseLogin, DataBaseRegister, DataBaseUIMenu, DocumentItem, DataBaseLogout,  DataBase_UIList, DeleteFromDatabase, AccessDatabase, AddToDatabase, ImportFromDataBase
 from .base_ui import VIEW3D_PT_Sketch_To_Mesh_Panel, VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel, VIEW3D_PT_Sketch_To_Mesh_Testing, AccessDbCustomPanel
 
 def register():
-    bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Poly Count", default=10, min=0, max=100)
+    bpy.types.Scene.poly_count_range = bpy.props.IntProperty(name="Vertice Separation Modifer", default=10, min=0, max=100)
     bpy.types.Scene.mesh_rating = bpy.props.IntProperty(name="Mesh Rating", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_X = bpy.props.IntProperty(name="Image Center X", default=10, min=0, max=100)
     bpy.types.Scene.Image_Center_Y = bpy.props.IntProperty(name="Image Center Y", default=10, min=0, max=100)
@@ -45,7 +45,6 @@ def register():
     bpy.utils.register_class(DocumentItem)    
     bpy.types.Scene.my_document_collection = bpy.props.CollectionProperty(type=DocumentItem)
     bpy.types.Scene.my_document_index = bpy.props.IntProperty()
-    bpy.utils.register_class(PullFromDatabase)
     bpy.utils.register_class(AddToDatabase)
     bpy.utils.register_class(AccessDbCustomPanel) 
     bpy.utils.register_class(AccessDatabase)
@@ -91,7 +90,6 @@ def unregister():
     bpy.utils.unregister_class(NotificationPopup)
 
     # db
-    bpy.utils.unregister_class(PullFromDatabase)
     bpy.utils.unregister_class(AddToDatabase)
     bpy.utils.unregister_class(AccessDbCustomPanel)
     bpy.utils.unregister_class(DataBaseLogout)

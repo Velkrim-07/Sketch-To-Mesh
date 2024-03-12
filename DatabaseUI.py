@@ -125,8 +125,6 @@ class AccessDatabase(bpy.types.Operator):
     def draw(self, context):    
         layout = self.layout
         row = layout.row()
-        row.operator('wm.pull_from_database', text='Pull from Database')
-        row = layout.row()
         row.template_list("DataBase_UIList", "Database_list", context.scene, "my_document_collection", context.scene, "my_document_index")
         row = layout.row()
         row.operator('wm.delete_from_database', text='Delete')
@@ -134,6 +132,9 @@ class AccessDatabase(bpy.types.Operator):
         row.operator('wm.import_from_database', text='Import')
 
     def invoke(self, context, event):
+        for doc in User.user_documents: #gets all of the documents in a specfic user's document
+            prop = context.scene.my_document_collection.add() #0 should be the first found property
+            prop.name =doc['fileName'] #saves the name of the document in the list
         return context.window_manager.invoke_props_dialog(self)
     
 
@@ -174,17 +175,7 @@ class DataBaseUIMenu(bpy.types.Panel):
             row.operator("wm.access_database", text="Access Database") 
             row = layout.row() 
             row.operator("wm.user_logout", text="Logout") # TODO: logout function in authentication
- 
 
-class PullFromDatabase(bpy.types.Operator):
-    bl_idname = "wm.pull_from_database"
-    bl_label = "Pull"
-
-    def execute(self, context): 
-        for doc in User.user_documents: #gets all of the documents in a specfic user's document
-            prop = context.scene.my_document_collection.add() #0 should be the first found property
-            prop.name =doc['fileName'] #saves the name of the document in the list
-        return{'FINISHED'}
     
 
 class DeleteFromDatabase(bpy.types.Operator):

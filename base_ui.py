@@ -30,7 +30,7 @@ class VIEW3D_PT_Sketch_To_Mesh_MeshSettings_Panel(bpy.types.Panel):
         layout = self.layout
         layout.label(text="Mesh Settings")
         row = layout.row()
-        row.prop(context.scene, "poly_count_range", text="Poly Count", slider=True)
+        row.prop(context.scene, "poly_count_range", text="Vertices Separator", slider=True)
         row = layout.row()
         row.operator("mesh.primitive_cube_add", text="Regenerate Preview Mesh")
         row = layout.row()
