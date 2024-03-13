@@ -233,29 +233,43 @@ class DataBaseUIMenu(bpy.types.Panel):
             row = layout.row()
             row.operator("mesh.primitive_cube_add", text="Logout")
 
-def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
-    KeyPoints: list = []
-    Descriptors: list = []
-    Matches: list = []
-    Images: list = []
-    Matched_Images: list = []
-    ImageNames: list = []
-    
-    PlaceImage(self) # processes the images
+#def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
+ #   KeyPoints: list = []
+  #  Descriptors: list = []
+#@@ -236,36 +252,9 @@ def Feature_detection(self, PlaneDataArray : list[PlaneItem]):
+   #         Descriptors.append(descriptors1)
+    #        ImageNames.append("MatchedView" + str(PlaneIndex) + PlaneData.PlaneFilepath[PlaneData.PlaneFilepath.rfind("."): ] ) 
 
-    if(PlaneDataArray.__len__() > 1):
-        PlaneIndex = 0
-        for PlaneData in PlaneDataArray:
-            keypoints1, descriptors1 = detect_and_describe_akaze(PlaneData.PlaneFilepath)
-            Images.append(cv2.imread(PlaneData.PlaneFilepath))
-            KeyPoints.append(keypoints1)
-            Descriptors.append(descriptors1)
-            ImageNames.append("MatchedView" + str(PlaneIndex) + PlaneData.PlaneFilepath[PlaneData.PlaneFilepath.rfind("."): ] ) 
+        #this should follow this format : #12 #23 #31
+     #   DescriptionIndex = 0
+      #  for descriptors in Descriptors:
+       #     if(DescriptionIndex + 1 != Descriptors.__len__()): NextDesc = Descriptors[DescriptionIndex + 1] #Gets the next descriptor 
+        #    else: NextDesc = Descriptors[0] # if we get to the last index
+         #   Matches.append(match_features(descriptors, NextDesc, method='AKAZE')) 
+          #  DescriptionIndex = DescriptionIndex + 1 
 
-def Feature_detection_colored_vertices(self, PlaneDataArray : list[PlaneItem]):
-    # Colored vertices implementation
-    pass
+        #IndexForKeypoints = 0
+        #for Keypoint in KeyPoints:
+         #   if(IndexForKeypoints + 1 != KeyPoints.__len__()):
+          #      NextKey = KeyPoints[IndexForKeypoints + 1] #Gets the next descriptor
+           #     NextImage = Images[IndexForKeypoints + 1]
+            #else:
+             #   NextKey = KeyPoints[0] # if we get to the last index
+              #  NextImage = Images[0]
+            #Matched_Images.append(draw_matches(Images[IndexForKeypoints], Keypoint, NextImage, NextKey, Matches[IndexForKeypoints]))
+            #IndexForKeypoints = IndexForKeypoints + 1
 
+        #MImageIndex = 0
+        #for MImages in Matched_Images:
+         #   try:
+          #      os.chdir("Matched_Images_Folder") #changes the directory to the folder where we are going to save the file
+           #     cv2.imwrite(ImageNames[MImageIndex], MImages) #saves the image
+            #    os.chdir("..\\") #goes back one directory   
+             #   print(f"Image prep done.")
+             #   return True
+            #except Exception as e:
+             #   print(f"Error: {e}")
+              #  return False
 def PlaceImage(self):
      #this will keep count of the views were have captured
         Itervalue = 0
