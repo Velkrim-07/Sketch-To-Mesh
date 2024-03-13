@@ -301,6 +301,25 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
 
 
+#This is just a placeholder function
+#def merge_points_with_z(coordinates, z_values):
+    # Check if the lengths of coordinates and z_values match
+    #if len(coordinates) != len(z_values):
+        #raise ValueError("The lengths of coordinates and z_values do not match.")
+    
+    #merged_list = [(x, y, z,) for (x, y,), z in zip(coordinates, z_values)]
+    #return merged_list
+#try:
+    #coordinates = [(1, 2), (3, 4), (5, 6)]
+    #z_values = [10, 20, 30]
+
+    #merged_coordinates = merge_points_with_z(coordinates, z_values)
+    #print(merged_coordinates)
+#except ValueError as e:
+    #print(f"Error: {e}")
+
+
+
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_add_plane_item)
     bpy.utils.unregister_class(VIEW3D_PT_Sketch_To_Mesh_Views_FilePath_Panel)
