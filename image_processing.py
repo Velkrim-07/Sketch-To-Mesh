@@ -123,58 +123,98 @@ def outline_image(image_path, Extension, ImgName, Filedirectory):
         print(f"Error: {e}")
         return False
  
-# def angle_between(p1, p2, p3):
-#     
-#     a = np.array(p1)
-#     b = np.array(p2)
-#     c = np.array(p3)
-
-#     # did i really just use math here
-#     ba = a - b
-#     bc = c - b
-
-#     cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
-#     angle = np.arccos(cosine_angle)
-
-#     return np.degrees(angle)    
     
 # TODO: refactor image prep function to utilize harris corner detection
 # a bunch of repeated code. 
 def find_and_color_vertices(image_path):
     
-    # load image
     image = cv2.imread(image_path)
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) # hsv color spread makes it easier to identify the colors we want
 
-    # repeated code tbh
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray = np.float32(gray)
-    dst = cv2.cornerHarris(gray, blockSize=2, ksize=3, k=0.04)
+    color_ranges = {
+        1: ((0, 100, 100), (10, 255, 255)),   # red
+        2: ((50, 100, 100), (70, 255, 255)),  # green
+        3: ((110, 100, 100), (130, 255, 255)), # blue
+        4: ((25, 100, 100), (35, 255, 255)), # yellow
+    
+    }
 
-    # helps vizualizing corners
-    dst = cv2.dilate(dst, None)
+    corners_with_id = {}
 
-    # threshold for a corner. using default values
-    corners_threshold = dst > 0.01 * dst.max()
+    for color_id, (lower, upper) in color_ranges.items():
+        
+        # this mask using the ranges of colors makes it easier to identify colored pixels. i am literally only looking for whatever is in lower and upper values
+        # for each value inside 
+        mask = cv2.inRange(hsv, np.array(lower, dtype=np.uint8), np.array(upper, dtype=np.uint8))
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours:
+            M = cv2.moments(contour)
+            
+            # pixel magic
+            # m is a dictionary of declared a few lines back
+            # im comparing the moments in the contours, finding the centroid of each coordenate and adding to the corner with an id dictionary.
+            # found this in a tutorial tho
+            
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                corners_with_id[(cX, cY)] = color_id
 
-    # getting the indices of corner points
-    corners = np.argwhere(corners_threshold)
+    return image, corners_with_id
 
-    corners = np.flip(corners, axis=1) # inverting y and x coordinates because np.argwhere returns in (row, column) format
+def visualize_connections(image1, corners1, image2, corners2):
+    
+    # just connecting both images for vizualization
+    h = max(image1.shape[0], image2.shape[0])
+    combined_image = np.zeros((h, image1.shape[1] + image2.shape[1], 3), dtype=np.uint8)
+    combined_image[:image1.shape[0], :image1.shape[1]] = image1
+    combined_image[:image2.shape[0], image1.shape[1]:] = image2
 
-    num_corners = len(corners)
 
-    # drawing corners on the image
-    for x, y in corners:
-        cv2.circle(image, (x, y), 3, (0, 0, 255), -1)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    
+    # zip returns the first iterator in both dictionaries. its kinda weird but i found it good to be used here
+    # basically i am iterating both at the same time
+    for (c1, id1), (c2, id2) in zip(corners1.items(), corners2.items()):
 
+        # just circles to identify the corners detected easier
+        cv2.circle(combined_image, c1, 5, (0, 255, 0), -1)
+        cv2.circle(combined_image, (c2[0] + image1.shape[1], c2[1]), 5, (0, 255, 0), -1)
 
-    print(f'Number of corners found: {num_corners}')
+        # if points have the same id in the dictionary
+        if id1 == id2:
+            cv2.line(combined_image, c1, (c2[0] + image1.shape[1], c2[1]), (255, 0, 0), 2) # connecting both points with blue line
+        
+        # writing the id for visualization (ONLY FOR BUILD REVIEW I GUESS?)
+        # TODO: figure out if this is needed or not
+        cv2.putText(combined_image, str(id1), c1, font, 0.5, (0, 0, 255), 2)
+        cv2.putText(combined_image, str(id2), (c2[0] + image1.shape[1], c2[1]), font, 0.5, (0, 0, 255), 2)
 
-    cv2.imshow('Detected Corners', image)
+    cv2.imshow('Matched Corners with IDs', combined_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
-    return corners
+# def camera_estimation(image1, image2, corner1, corner2): 
+    
+#     # i need to create a data struct that represents the both corner1 and corner2 matched values
+#     temp = 1
+
+#     # camera calibration parameters
+#     K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])  # Intrinsic matrix
+#     dist_coeffs = np.array([k1, k2, p1, p2, k3])          # Distortion coefficients
+
+#     # essential matrix estimation (from matching points and camera parameters)
+#     E, _ = cv2.findEssentialMat(matching_points_image1, matching_points_image2, K, method=cv2.RANSAC, prob=0.999, threshold=0.5)
+
+#     # recover relative pose (rotation and translation) from the essential matrix
+#     _, R, t, _ = cv2.recoverPose(E, matching_points_image1, matching_points_image2, K)
+
+#     # triangulate points to estimate 3D structure
+#     P1 = np.hstack((np.eye(3), np.zeros((3, 1))))  # Projection matrix for image 1
+#     P2 = np.hstack((R, t))                         # Projection matrix for image 2
+#     points_4d = cv2.triangulatePoints(P1, P2, matching_points_image1, matching_points_image2)
+#     points_3d = points_4d[:3] / points_4d[3]
     
 def match_features(descriptors1, descriptors2, method='ORB'):
     # using ORB and AKAZE for testing

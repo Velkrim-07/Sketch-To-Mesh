@@ -1,6 +1,6 @@
 import bpy
 from .db_operations import test_connection, save_file_to_db, get_files_by_user_id, delete_files_by_object_id # the . is on purpose. do not remove
-from .image_processing import test_feature_detection, find_and_color_vertices # the . is on purpose. do not remove
+from .image_processing import test_feature_detection, find_and_color_vertices, visualize_connections # the . is on purpose. do not remove
 from .blender_operations import DrawMeshToScreen
 from .blender_operations import saveObj
 
@@ -66,14 +66,20 @@ class StMTestImagePrep(bpy.types.Operator):
 
     def execute(self, context):
         #test_feature_detection()
-        path = r"C:\Users\RAFAEL MUITO ZIKA\Desktop\Test\sidee.png"
-        detected_corners = find_and_color_vertices(path)
+        path_one = r"C:\Users\RAFAEL MUITO ZIKA\Desktop\Test Images\colored-1.png"
+        path_two = r"C:\Users\RAFAEL MUITO ZIKA\Desktop\Test Images\colored-2.png"
+        
+        image1, corner1 = find_and_color_vertices(path_one)
+        image2, corner2 = find_and_color_vertices(path_two)
+        
+        visualize_connections(image1, corner1, image2, corner2)
 
         # print cordinates for the corners
         # TODO: figure out a way to detect less features.
         print("Coordinates of corners:")
-        for idx, (x, y) in enumerate(detected_corners):
-            print(f"Corner {idx}: ({x}, {y})")
+        for (c1, id1), (c2, id2) in zip(corner1.items(), corner2.items()):
+            if id1 == id2:
+                print(f"The point {c1} in image 1 matched with {c2} in image 2 with color ID {id1}")
 
 
 # class that executes test_connection from db_operations
