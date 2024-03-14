@@ -6,6 +6,7 @@ import io
 import tempfile
 from .image_processing import PlaneItem
 from .file_conversion import blend_opener, fbx_opener
+from .DepthByColor import GenerateEdges, NormaliseData, GenerateShapeEdges, CalculateLocationsOfAvaliblePixelsAroundPoint, EdgeData
 
 
 def saveObj():
@@ -39,6 +40,7 @@ def DefinePixels(image, Color, Direction):
         case "Left": CurrRangePair = (range(imagedata[1] -1), range(imagedata[0] -1))
         case "MiddleRight" : CurrRangePair = (range(halfImageData[1] -1), range(halfImageData[0]- 1 ))
         case "MiddleLeft": CurrRangePair = (range(halfImageData[1] -1), range(imagedata[0] - halfImageData[0]-  1 ))
+
     row = 0; column = 0
     if (Direction == "Right" or Direction == "MiddleRight"):
         base = (imagedata[0] - halfImageData[0] - 1) if  Direction == "MiddleRight" else 0
@@ -90,8 +92,13 @@ def SpaceOutPixels(ColorWeAreLookingFor, PolyCount, plane:PlaneItem):
 
             NextIter = NextIter + 1
         FullVertList[Sides] = VertList
+    ZAxisList = GetZAxisByColor(FullVertList, PolyCount, plane)
     return FullVertList
     
+def GetZAxisByColor(FullVertList, PolyCount, plane:PlaneItem):
+    return GenerateShapeEdges(FullVertList, PolyCount, plane )#polycount is our radius
+
+
 def NormaliseVertList(ColorWeAreLookingFor, PolyCount, plane):
     FullVertList = SpaceOutPixels(ColorWeAreLookingFor, PolyCount, plane)
     xArray = []; yArray = []
@@ -109,33 +116,14 @@ def NormaliseVertList(ColorWeAreLookingFor, PolyCount, plane):
     NarrowedNormalisedVertList = []
     for count in range(xArray.__len__()): NarrowedNormalisedVertList.append(((xArray[count]), (yArray[count]), (1.0))) # we add the one into the list so the list will have the Z coordinate.
     NewNarrowList = tuple(NarrowedNormalisedVertList)
+
     return NewNarrowList   
 
-def NormaliseData(List:list):
-    NewList = []
-    if not List: return False
-    else: 
-        for element in List:  
-            norm = (element - min(List)) / (max(List) - min(List))
-            NewList.append(norm)
-    return NewList
-
 def CreateEdges(ColorWeAreLookingFor, PolyCount, plane:PlaneItem):
-    MeshStructure = {}
     VertList = NormaliseVertList(ColorWeAreLookingFor, PolyCount, plane)
     if VertList == False:  return False #ends the function before any extra work is done
 
-    MeshStructure[0] = VertList
-    edgeList:list =[]
-    iterator = 1
-
-    for verts in range(VertList.__len__()-1): #this will get the vertical edges for the mesh.
-        if iterator >=  VertList.__len__()-1: edgeList.append((0, iterator))
-        else:
-            edgeList.append((verts, iterator))
-            iterator = iterator + 1
-    MeshStructure[1] = edgeList
-    # We also need to get the horizontal. But maybe later
+    MeshStructure = GenerateEdges(VertList, "BlenderPoints")
     MeshStructure[2] = [] #this will hold the faces
     return MeshStructure
 
@@ -186,8 +174,6 @@ def decode_file(data, file_extension):
             fbx_opener(temp_file.name)
         case _: #defualt case # if there is an image file
             bpy.ops.import_image.to_plane(files=[{"name":temp_file.name, "name":temp_file.name}], directory="", relative=False)
-        
-
 
     #remove the temp file
     os.unlink(temp_file.name)
